@@ -73,6 +73,188 @@ cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 
 
 
+double util::interpolate(double x, vector< pair<double, double> > &table) {
+	const double INF = 1.e100;
+	// Assumes that "table" is sorted by .first
+	// Check if x is out of bound
+	if (x > table.back().first) return INF;
+	if (x < table[0].first) return -INF;
+	vector<pair<double, double> >::iterator it, it2;
+	// INFINITY is defined in math.h in the glibc implementation
+	it = lower_bound(table.begin(), table.end(), make_pair(x, -INF));
+	// Corner case
+	if (it == table.begin()) return it->second;
+	it2 = it;
+	--it2;
+	return it2->second + (it->second - it2->second)*(x - it2->first)/(it->first - it2->first);
+}
+
+void util::makeBezier(double gamma, double contrast, int N_SEG, vector<int> &lutX, vector<int> &lutY){
+	/*for(int i=0;i<N_SEG;i++){	
+		lutX[i] = i;
+		lutY[i] = i;
+	}*/
+
+	//cout << "inside makeBezier(" << gamma << "," << contrast << "," << N_SEG << ")" << endl;
+	//Gamma    values are in double from [-1 to 1], 0 being neutral
+	//Contrast values are in double from [-1 to 1], 0 being neutral
+	//Contrast values increase
+
+	//double xarr[N_SEG];
+	//double yarr[N_SEG];
+
+	//Set start point
+	double x1=0.0;
+	double y1=0.0;
+	//Set end point
+	double x4=N_SEG-1.0; //fixme is this -1?
+	double y4=N_SEG-1.0; //fixme is this -1?
+
+	//We put the 2,3 bezier points on the line between (0,1) and (1,0)
+	double x2=0.5*N_SEG*(1.0-gamma + contrast);
+	double x3=0.5*N_SEG*(1.0-gamma - contrast);
+
+
+	//Because we want the two 'in-between' points to lie in the same line ((0,1) and (1,0)), we calculate y2, y3:
+	double y2=N_SEG-x2;
+	double y3=N_SEG-x3;
+
+	//cout << "Calculating bezier.." << endl;
+	//cubic_bezier(x1, y1, x2, y2, x3, y3, x4, y4, N_SEG, xarr, yarr);
+
+	vector<pair<double, double> > table;
+	for (int i=0; i < N_SEG; i++){
+		double t = (double)i / (double)(N_SEG-1);
+
+		double a = pow((1.0 - t), 3.0);
+		double b = 3.0 * t * pow((1.0 - t), 2.0);
+		double c = 3.0 * pow(t, 2.0) * (1.0 - t);
+		double d = pow(t, 3.0);
+
+		double x = a * x1 + b * x2 + c * x3 + d * x4;
+		double y = a * y1 + b * y2 + c * y3 + d * y4;
+
+		//std::cout << "i" << i << " (x,y)=(" << x << "," << y << ")" << std::endl;
+		//std::cout << x << "," << y << std::endl;
+
+		//xarr[i]=x;
+		//yarr[i]=y;
+		table.push_back(make_pair(x,y));		
+		//pts[i][0] = x;
+		//pts[i][1] = y;
+		//return pts;
+	}
+
+
+
+	//cout << "Sucesfully constructed bezier.." << endl;
+
+	//cout << "Constructing bezier interpolation table.." << endl;
+
+	//for(int i=0;i<N_SEG;i++){	
+		
+		//sort(table.begin(), table.end()); //We have a span so sorting is not neccesary
+	//}
+	//cout << "Interpolation table filled in.."
+
+	//cout << "Interpolating.." << endl;
+	int value;	
+	for(int i=0;i<N_SEG;i++){	
+		lutX[i] = i;
+		//value = interp_1(i, xarr, yarr, N_SEG);
+		value = interpolate(double(i),table);
+		value = (value < 0 )? 0 : value; //Values below zero should be zero
+		value = (value > (N_SEG-1) )? N_SEG-1 : value; //values above N_SEG-1 should be N_SEG-1
+		lutY[i] = value;
+		
+		//cout << i << "," << interpolate(double(i),table) << endl; 
+	}
+	//cout << "Interpolation done, discrete (x) bezier constructed." << endl;
+}
+
+
+void util::makeBezier(double gamma, double contrast, int N_SEG, int lutX[], int lutY[]){
+	/*for(int i=0;i<N_SEG;i++){	
+		lutX[i] = i;
+		lutY[i] = i;
+	}*/
+
+	//cout << "inside makeBezier(" << gamma << "," << contrast << "," << N_SEG << ")" << endl;
+	//Gamma    values are in double from [-1 to 1], 0 being neutral
+	//Contrast values are in double from [-1 to 1], 0 being neutral
+	//Contrast values increase
+
+	//double xarr[N_SEG];
+	//double yarr[N_SEG];
+
+	//Set start point
+	double x1=0.0;
+	double y1=0.0;
+	//Set end point
+	double x4=N_SEG-1.0; //fixme is this -1?
+	double y4=N_SEG-1.0; //fixme is this -1?
+
+	//We put the 2,3 bezier points on the line between (0,1) and (1,0)
+	double x2=0.5*N_SEG*(1.0-gamma + contrast);
+	double x3=0.5*N_SEG*(1.0-gamma - contrast);
+
+
+	//Because we want the two 'in-between' points to lie in the same line ((0,1) and (1,0)), we calculate y2, y3:
+	double y2=N_SEG-x2;
+	double y3=N_SEG-x3;
+
+	//cout << "Calculating bezier.." << endl;
+	//cubic_bezier(x1, y1, x2, y2, x3, y3, x4, y4, N_SEG, xarr, yarr);
+
+	vector<pair<double, double> > table;
+	for (int i=0; i < N_SEG; i++){
+		double t = (double)i / (double)(N_SEG-1);
+
+		double a = pow((1.0 - t), 3.0);
+		double b = 3.0 * t * pow((1.0 - t), 2.0);
+		double c = 3.0 * pow(t, 2.0) * (1.0 - t);
+		double d = pow(t, 3.0);
+
+		double x = a * x1 + b * x2 + c * x3 + d * x4;
+		double y = a * y1 + b * y2 + c * y3 + d * y4;
+
+		//std::cout << "i" << i << " (x,y)=(" << x << "," << y << ")" << std::endl;
+		//std::cout << x << "," << y << std::endl;
+
+		//xarr[i]=x;
+		//yarr[i]=y;
+		table.push_back(make_pair(x,y));		
+		//pts[i][0] = x;
+		//pts[i][1] = y;
+		//return pts;
+	}
+
+
+
+	//cout << "Sucesfully constructed bezier.." << endl;
+
+	//cout << "Constructing bezier interpolation table.." << endl;
+
+	//for(int i=0;i<N_SEG;i++){	
+		
+		//sort(table.begin(), table.end()); //We have a span so sorting is not neccesary
+	//}
+	//cout << "Interpolation table filled in.."
+
+	//cout << "Interpolating.." << endl;
+	int value;	
+	for(int i=0;i<N_SEG;i++){	
+		lutX[i] = i;
+		//value = interp_1(i, xarr, yarr, N_SEG);
+		value = interpolate(double(i),table);
+		value = (value < 0 )? 0 : value; //Values below zero should be zero
+		value = (value > (N_SEG-1) )? N_SEG-1 : value; //values above N_SEG-1 should be N_SEG-1
+		lutY[i] = value;
+		//lutY[i] = i; //FIXME
+		//cout << i << "," << interpolate(double(i),table) << endl; 
+	}
+	//cout << "Interpolation done, discrete (x) bezier constructed." << endl;
+}
 
 
 void util::autoClipBrighten(cv::Mat &matImage, double percentile_lower, double percentile_upper){
@@ -462,3 +644,71 @@ std::vector<std::string> util::folderFilesToVector(string folder){
 	return vecFileNames;
 }
 
+
+
+// Get an existing tag, or create one if it doesn't exist 
+ExifEntry* util::init_tag(ExifData *exif, ExifIfd ifd, ExifTag tag){
+ 	ExifEntry *entry;
+ 	// Return an existing tag if one exists 
+ 	if (!((entry = exif_content_get_entry (exif->ifd[ifd], tag)))) {
+ 	    // Allocate a new entry
+ 	    entry = exif_entry_new ();
+ 	    assert(entry != NULL); // catch an out of memory condition 
+ 	    entry->tag = tag; // tag must be set before calling exif_content_add_entry 
+
+ 	    // Attach the ExifEntry to an IFD 
+ 	    exif_content_add_entry (exif->ifd[ifd], entry);
+
+ 	    // Allocate memory for the entry and fill with default data 
+ 	    exif_entry_initialize (entry, tag);
+
+ 	    // Ownership of the ExifEntry has now been passed to the IFD.
+ 	    // One must be very careful in accessing a structure after
+ 	    // unref'ing it; in this case, we know "entry" won't be freed
+ 	    // because the reference count was bumped when it was added to
+ 	    // the IFD.
+ 	    //
+ 	    exif_entry_unref(entry);
+ 	}
+ 	return entry;
+}
+
+// Create a brand-new tag with a data field of the given length, in the
+// given IFD. This is needed when exif_entry_initialize() isn't able to create
+// this type of tag itself, or the default data length it creates isn't the
+// correct length.
+//
+ExifEntry* util::create_tag(ExifData *exif, ExifIfd ifd, ExifTag tag, size_t len){
+	//ExifContent *content;
+ 	void *buf;
+ 	ExifEntry *entry;
+
+ 	// Create a memory allocator to manage this ExifEntry 
+ 	ExifMem *mem = exif_mem_new_default();
+ 	assert(mem != NULL); // catch an out of memory condition 
+
+ 	// Create a new ExifEntry using our allocator
+ 	entry = exif_entry_new_mem (mem);
+ 	assert(entry != NULL);
+
+ 	// Allocate memory to use for holding the tag data
+ 	buf = exif_mem_alloc(mem, len);
+ 	assert(buf != NULL);
+
+ 	// Fill in the entry
+ 	entry->data = (unsigned char*)buf;
+ 	entry->size = len;
+ 	entry->tag = tag;
+ 	entry->components = len;
+ 	entry->format = EXIF_FORMAT_UNDEFINED;
+
+ 	// Attach the ExifEntry to an IFD */
+ 	exif_content_add_entry (exif->ifd[ifd], entry);
+
+ 	//The ExifMem and ExifEntry are now owned elsewhere
+	//exif_mem_free(mem, buf); //breaks
+ 	exif_mem_unref(mem);
+ 	exif_entry_unref(entry);
+
+ 	return entry;
+}

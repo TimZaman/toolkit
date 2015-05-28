@@ -70,6 +70,8 @@
 
 #include <vector>
 
+#include <libexif/exif-data.h> //libexif-dev
+#include <exiv2/exiv2.hpp> //libexiv2-dev
 
 #ifdef __APPLE__
 	#include <asl.h> //Apple System Logger API
