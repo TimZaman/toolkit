@@ -12,6 +12,9 @@ cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 
 	cv::Rect rBounding = rRect.boundingRect();
 
+	//Constrain it
+	rBounding = constrainRectInSize(rBounding, matImage.size());
+
 	//Crop this off, and clone (because we rotate later)
 
 	cv::Mat matBound = matImage(rBounding).clone();
