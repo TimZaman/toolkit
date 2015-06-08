@@ -102,6 +102,7 @@ namespace util{
 
 
 	// === FUNCTIONS === //
+	bool isValidURL(std::string);
 	cv::Mat crop(cv::Mat src, cv::RotatedRect rRect);
 	void rot90(cv::Mat &matImage, int rotflag);
 	void autoClipBrighten(cv::Mat &matImage, double percentile_lower, double percentile_upper);

@@ -3,6 +3,22 @@
 #include "utils.h"
 
 
+bool util::isValidURL(std::string strUrl){
+	try
+	{
+		boost::regex re("(ftp|http|https):\/\/.[0-9a-zA-Z:\/.%]*");
+		if (!boost::regex_match(strUrl, re)){
+			//throw "Your URL is not formatted correctly!";
+			return false;
+		} else {
+			return true;
+		}
+	} catch (boost::regex_error& e) {
+		cerr << "The URL regexp is invalid!" << endl;
+		throw(e);
+	}
+	return true;
+}
 
 
 cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
