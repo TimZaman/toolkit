@@ -1,33 +1,22 @@
-/* Name :       utils.h [part of Picturae Deltae-cli]
+/* Name :       utils.h [part of pixelprisma utility functions]
  * Version:     v1.0
  * Date :       2012-05-07
- * Developer :  Tim Zaman (timbobel@gmail.com)
- * (c)2012 Picturae BV, All rights reserved
+ * Developer :  Tim Zaman, Pixelprisma BV (timbobel@gmail.com)
  * Distribution in any form is prohibited.
  */
 
 #pragma once
 
-#include <QObject>
-#include <QApplication>
-#include <QWidget>
-#include <QLabel>
-#include <QThread>
-#include <QMutex>
-#include <QString>
-#include <QDesktopWidget>
-#include <QGraphicsPixmapItem>
-#include <QGraphicsScene>
-#include <QtGui>
-#include <QFileDialog>
-#include <QTreeView>
-#include <QList>
-#include <QMetaType>
-#include <QMessageBox>
-#include <QProgressBar>
-#include <QInputDialog>
-#include <QFileSystemModel>
-#include <QGraphicsView>
+#ifdef QT_VERSION //Built with QT support
+	#include <QObject>
+	#include <QThread>
+	#include <QMutex>
+	#include <QString>
+	#include <QGraphicsPixmapItem>
+	#include <QtGui>
+	#include <QList>
+	#include <QMetaType>
+#endif 
 
 
 #include <iostream>
@@ -66,7 +55,9 @@
 #include <sys/stat.h> //mkdir
 #include <dirent.h> //dir listing
 
-#include <opencv2/opencv.hpp>
+#ifdef CV_VERSION //If built with OpenCV support
+	#include <opencv2/opencv.hpp>
+#endif
 
 #include <vector>
 
@@ -103,13 +94,7 @@ namespace util{
 
 	// === FUNCTIONS === //
 	bool isValidURL(std::string);
-	cv::Mat crop(cv::Mat src, cv::RotatedRect rRect);
-	void rot90(cv::Mat &matImage, int rotflag);
-	void autoClipBrighten(cv::Mat &matImage, double percentile_lower, double percentile_upper);
-	cv::Rect constrainRectInSize(cv::Rect rCrop, cv::Size sImage);
-	double pointDist(cv::Point pt1, cv::Point pt2);
-	double pointDist(cv::Point2f pt1, cv::Point2f pt2);
-	void rotate(cv::Mat& src, double angle, cv::Mat& dst);
+
 	void logASL(std::string);
 	std::string escapeRegex(std::string);
 	std::vector<std::string> regexReplaceInVector(std::vector<std::string> , std::string, std::string);
@@ -120,7 +105,7 @@ namespace util{
 	std::string ReplaceAll(std::string str, const std::string& from, const std::string& to);
 	std::string fileformatToRegex(std::string);
 	std::string regex_escape(const std::string&);
-	QImage Mat2QImage(const cv::Mat3b &);
+
 	int xfilelength(int );
 
 	double interpolate(double x, vector< pair<double, double> > &table);
@@ -129,6 +114,21 @@ namespace util{
 
 	ExifEntry* init_tag(ExifData *, ExifIfd, ExifTag );
 	ExifEntry* create_tag(ExifData *, ExifIfd, ExifTag , size_t );
+
+	//OpenCV related
+	#ifdef CV_VERSION //If built with OpenCV support
+		cv::Mat crop(cv::Mat src, cv::RotatedRect rRect);
+		void rot90(cv::Mat &matImage, int rotflag);
+		void autoClipBrighten(cv::Mat &matImage, double percentile_lower, double percentile_upper);
+		cv::Rect constrainRectInSize(cv::Rect rCrop, cv::Size sImage);
+		double pointDist(cv::Point pt1, cv::Point pt2);
+		double pointDist(cv::Point2f pt1, cv::Point2f pt2);
+		void rotate(cv::Mat& src, double angle, cv::Mat& dst);
+		#ifdef QT_VERSION //Built with QT support
+			QImage Mat2QImage(const cv::Mat3b &);
+		#endif
+	#endif
+
 };
 
 
