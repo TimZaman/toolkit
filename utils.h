@@ -5,7 +5,8 @@
  * Distribution in any form is prohibited.
  */
 
-#pragma once
+#ifndef UTILS_TIM_H
+#define UTILS_TIM_H
 
 #ifdef QT_VERSION //Built with QT support
 	#include <QObject>
@@ -134,7 +135,7 @@ namespace util{
 
 
 
-
+#endif
 
 
 

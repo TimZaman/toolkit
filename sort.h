@@ -5,7 +5,8 @@
 //   sorted     sorted vector, allowed to be same as unsorted
 //   index_map  an index map such that sorted[i] = unsorted[index_map[i]]
 
-#pragma once
+#ifndef SORT_H
+#define SORT_H
 
 template <class T>
 void sort(
@@ -79,3 +80,4 @@ void reorder(
   }
 }
 
+#endif
