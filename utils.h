@@ -8,7 +8,7 @@
 #ifndef UTILS_TIM_H
 #define UTILS_TIM_H
 
-#ifdef QT_VERSION //Built with QT support
+
 	#include <QObject>
 	#include <QThread>
 	#include <QMutex>
@@ -17,7 +17,7 @@
 	#include <QtGui>
 	#include <QList>
 	#include <QMetaType>
-#endif 
+
 
 
 #include <iostream>
@@ -117,18 +117,18 @@ namespace util{
 	ExifEntry* create_tag(ExifData *, ExifIfd, ExifTag , size_t );
 
 	//OpenCV related
-	#ifdef CV_VERSION //If built with OpenCV support
-		cv::Mat crop(cv::Mat src, cv::RotatedRect rRect);
-		void rot90(cv::Mat &matImage, int rotflag);
-		void autoClipBrighten(cv::Mat &matImage, double percentile_lower, double percentile_upper);
-		cv::Rect constrainRectInSize(cv::Rect rCrop, cv::Size sImage);
-		double pointDist(cv::Point pt1, cv::Point pt2);
-		double pointDist(cv::Point2f pt1, cv::Point2f pt2);
-		void rotate(cv::Mat& src, double angle, cv::Mat& dst);
-		#ifdef QT_VERSION //Built with QT support
-			QImage Mat2QImage(const cv::Mat3b &);
-		#endif
-	#endif
+	
+	cv::Mat crop(cv::Mat src, cv::RotatedRect rRect);
+	void rot90(cv::Mat &matImage, int rotflag);
+	void autoClipBrighten(cv::Mat &matImage, double percentile_lower, double percentile_upper);
+	cv::Rect constrainRectInSize(cv::Rect rCrop, cv::Size sImage);
+	double pointDist(cv::Point pt1, cv::Point pt2);
+	double pointDist(cv::Point2f pt1, cv::Point2f pt2);
+	void rotate(cv::Mat& src, double angle, cv::Mat& dst);
+
+	QImage Mat2QImage(const cv::Mat3b &); //Opencv and Qt
+	
+	
 
 };
 

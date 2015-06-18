@@ -6,7 +6,7 @@
 
 
 //OpenCV related
-#ifdef CV_VERSION //If built with OpenCV support
+
 
 cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 
@@ -176,7 +176,7 @@ cv::Rect util::constrainRectInSize(cv::Rect rCrop, cv::Size sImage){
 }
 
 
-#ifdef QT_VERSION //Built with QT support
+
 
 QImage util::Mat2QImage(const cv::Mat3b &src) {
   QImage dest(src.cols, src.rows, QImage::Format_ARGB32);
@@ -190,13 +190,13 @@ QImage util::Mat2QImage(const cv::Mat3b &src) {
   return dest;
 }
 
-//END BUILT WITH OPENCV+QT
-#endif
+
+
 
 
 
 //END BUILT WITH OPENCV
-#endif 
+
 
 
 
