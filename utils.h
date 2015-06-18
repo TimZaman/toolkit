@@ -56,9 +56,9 @@
 #include <sys/stat.h> //mkdir
 #include <dirent.h> //dir listing
 
-#ifdef CV_VERSION //If built with OpenCV support
-	#include <opencv2/opencv.hpp>
-#endif
+
+#include <opencv2/opencv.hpp>
+
 
 #include <vector>
 
