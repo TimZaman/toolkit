@@ -42,35 +42,11 @@ cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 
 
 	//Now we can crop, outward from the middle, with the size of the rotatedrect
-
 	cv::Mat matCrop;
 	getRectSubPix(matBound, rect_size, rRect.center, matCrop);
 
 	return matCrop;
 
-/*
-
-	// This is the RotatedRect, I got it from a contour for example...
-	cv::RotatedRect rect = rRect;
-	// matrices we'll use
-	cv::Mat M, rotated, cropped;
-	// get angle and size from the bounding box
-	float angle = rect.angle;
-	cv::Size rect_size = rect.size;
-	// thanks to http://felix.abecassis.me/2011/10/opencv-rotation-deskewing/
-	if (rect.angle < -45.) {
-		angle += 90.0;
-		swap(rect_size.width, rect_size.height);
-	}
-	// get the rotation matrix
-	M = getRotationMatrix2D(rect.center, angle, 1.0);
-	// perform the affine transformation on your image in src,
-	// the result is the rotated image in rotated. I am doing
-	// cubic interpolation here
-	warpAffine(src, rotated, M, src.size(), cv::INTER_CUBIC);
-	// crop the resulting image, which is then given in cropped
-	getRectSubPix(rotated, rect_size, rect.center, cropped);
-	return cropped;*/
 }
 
 
