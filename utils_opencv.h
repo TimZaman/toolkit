@@ -72,6 +72,7 @@ namespace util{
 	double pointDist(cv::Point pt1, cv::Point pt2);
 	double pointDist(cv::Point2f pt1, cv::Point2f pt2);
 	void rotate(cv::Mat& src, double angle, cv::Mat& dst);
+	cv::Size getFitSize(cv::Size sizeIn, cv::Size sizeOut);
 
 };
 

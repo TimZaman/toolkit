@@ -109,6 +109,20 @@ void util::autoClipBrighten(cv::Mat &matImage, double percentile_lower, double p
 }
 
 
+cv::Size util::getFitSize(cv::Size sizeIn, cv::Size sizeOut){
+	//Gets the output size for 'fittin within'
+	double dAspRat    = double(sizeIn.width)/double(sizeIn.height);  //Aspect ratio of the image itself
+	double dAspRatBox = double(sizeOut.width)/double(sizeOut.height); //Aspect ratio of the box 
+	cv::Size sizeFit;
+	if (dAspRat>dAspRatBox){ //Match width
+		sizeFit = cv::Size(sizeOut.width, floor(sizeOut.height*dAspRatBox/dAspRat));
+	} else { //Match height
+		sizeFit = cv::Size(floor(sizeOut.width*dAspRat/dAspRatBox), sizeOut.height);
+	}
+	return sizeFit;
+}
+
+
 double util::pointDist(cv::Point pt1, cv::Point pt2){
   return sqrt(pow((double)(pt1.x-pt2.x),2)+pow((double)(pt1.y-pt2.y),2));
 }
