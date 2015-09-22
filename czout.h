@@ -57,7 +57,7 @@ struct czout_printer {
 	    }
     }
 
-    int verbose=1;
+    int verbose=0;
 };
 
 
