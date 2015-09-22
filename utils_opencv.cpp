@@ -34,10 +34,10 @@ cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 	//Account for rotation
 	if (rRect.angle < -45.) {
 		angle += 90.0;
-		swap(rect_size.width, rect_size.height);
+		std::swap(rect_size.width, rect_size.height);
 	} else  if (rRect.angle > 45.) {
 		angle -= 90.0;
-		swap(rect_size.width, rect_size.height);
+		std::swap(rect_size.width, rect_size.height);
 	}
 
 
@@ -55,13 +55,13 @@ void util::autoClipBrighten(cv::Mat &matImage, double percentile_lower, double p
 
 	//Check parameters
 	if (percentile_lower <0 || percentile_upper <0){
-		cout << "Error in autoClipBrighten: percentile is lower than 0." << endl;
+		std::cout << "Error in autoClipBrighten: percentile is lower than 0." << std::endl;
 		return;
 	} else if (percentile_lower>1 || percentile_upper>1){
-		cout << "Error in autoClipBrighten: percentile exceeds 1." << endl;
+		std::cout << "Error in autoClipBrighten: percentile exceeds 1." << std::endl;
 		return;
 	} else if (percentile_lower >= percentile_upper){
-		cout << "Error in autoClipBrighten: lower percentile lower than high one." << endl;
+		std::cout << "Error in autoClipBrighten: lower percentile lower than high one." << std::endl;
 		return;
 	}
 
@@ -77,7 +77,7 @@ void util::autoClipBrighten(cv::Mat &matImage, double percentile_lower, double p
 	for (int i=0;i<255;i++){
 	  histarea255 += hist255.at<float>(i);
 	}
-	//cout << "histarea255=" << histarea255 << endl;
+	//std::cout << "histarea255=" << histarea255 << std::endl;
 	//Account for the histogram area, set cum to 1.
 	float hist255cum=0;
 	int binlow=-1; //lower percentile
@@ -92,11 +92,11 @@ void util::autoClipBrighten(cv::Mat &matImage, double percentile_lower, double p
 	  if (hist255cum>percentile_upper && binhigh==-1){
 	    binhigh=i;
 	  }
-	  //cout <<  "histcum=" << hist255cum << endl;
+	  //std::cout <<  "histcum=" << hist255cum << std::endl;
 	}
-	//cout << hist255;
+	//std::cout << hist255;
 
-	//cout << "binhigh=" << binhigh << " low=" << binlow << endl;
+	//std::cout << "binhigh=" << binhigh << " low=" << binlow << std::endl;
 
 	//Now scale the image to the percentiles, 5%-95% to [0-255]
 	//Caculate the offset and scaling values
@@ -142,12 +142,12 @@ void util::rot90(cv::Mat &matImage, int rotflag){
 	} else if (rotflag ==3){
 		flip(matImage, matImage,-1);	//flip(-1)=180			
 	} else if (rotflag != 0){ //if not 0,1,2,3:
-		cout  << "Unknown rotation flag(" << rotflag << ")" << endl;
+		std::cout  << "Unknown rotation flag(" << rotflag << ")" << std::endl;
 	}
 }
 
 void util::rotate(cv::Mat& src, double angle, cv::Mat& dst){
-    //cout << RANDCOL << "R O T A T I N G" << endlr;
+    //std::cout << RANDCOL << "R O T A T I N G" << std::endlr;
     //int len = std::max(src.cols, src.rows);
     cv::Point2f ptCp(src.cols*0.5, src.rows*0.5);
     //cv::Point2f pt(len/2., len/2.);

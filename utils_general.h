@@ -8,18 +8,22 @@
 #ifndef UTILS_GENERAL_TIM_H
 #define UTILS_GENERAL_TIM_H
 
+#include <iomanip>
 #include <iostream>
 #include <stdio.h> //file streams
 #include <string>
+#include <vector>
 #include <clocale>
-
 #include <fcntl.h>
-#include <pthread.h> //Multithreading (GTK)
-
+//#include <pthread.h> //Multithreading (GTK)
 #include <time.h>
-
 #include <sys/statvfs.h> //Free disk space checker
-
+#include <sys/types.h>
+#include <sys/stat.h> //mkdir
+#include <dirent.h> //dir listing
+#include <unistd.h>
+#include <pwd.h>
+#include <cstdlib>
 
 #ifndef Q_MOC_RUN
 	#include <boost/program_options.hpp> //libboost-dev, libboost-1.53-all-dev
@@ -32,21 +36,7 @@
 	#include <boost/foreach.hpp>
 #endif
 
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <unistd.h>
-#include <pwd.h>
-
-#include <iomanip>
-#include <cstdlib>
-#include <sys/stat.h> //mkdir
-#include <dirent.h> //dir listing
-
 #include <opencv2/opencv.hpp>
-
-#include <vector>
 
 #include <libexif/exif-data.h> 
 #include <exiv2/exiv2.hpp>  //is this needed?
@@ -65,9 +55,6 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
 }
 
 
-using namespace std;
-namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 namespace util{
 
@@ -82,20 +69,20 @@ namespace util{
 
 	void logASL(std::string);
 	std::string escapeRegex(std::string);
-	std::vector<std::string> regexReplaceInVector(std::vector<std::string> , std::string, std::string);
+	std::vector<std::string> regexReplaceInVector(std::vector<std::string>, std::string, std::string);
 	std::vector<std::string> correlateFileVectorFormat(std::vector<std::string> , std::string , int , int &, std::vector<std::string> &);
-	std::vector<std::string> folderFilesToVector(string folder);
+	std::vector<std::string> folderFilesToVector(std::string folder);
 	std::map<std::string, std::string> relateFormatAndFile(std::string, std::string);
-	vector<string> getRegexMatches(std::string strRegex, std::string strMatches);
+	std::vector<std::string> getRegexMatches(std::string strRegex, std::string strMatches);
 	std::string ReplaceAll(std::string str, const std::string& from, const std::string& to);
 	std::string fileformatToRegex(std::string);
 	std::string regex_escape(const std::string&);
 
 	int xfilelength(int );
 
-	double interpolate(double x, vector< pair<double, double> > &table);
+	double interpolate(double x, std::vector< std::pair<double, double> > &table);
 	void makeBezier(double gamma, double contrast, int N_SEG, int lutX[], int lutY[]);
-	void makeBezier(double gamma, double contrast, int N_SEG, vector<int> &, vector<int> &);
+	void makeBezier(double gamma, double contrast, int N_SEG, std::vector<int> &, std::vector<int> &);
 
 	ExifEntry* init_tag(ExifData *, ExifIfd, ExifTag );
 	ExifEntry* create_tag(ExifData *, ExifIfd, ExifTag , size_t );

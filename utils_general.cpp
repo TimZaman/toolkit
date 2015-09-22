@@ -2,7 +2,7 @@
 
 #include "utils_general.h"
 
-
+//using namespace fs = boost::filesystem;
 
 bool util::isValidURL(std::string strUrl){
 	try
@@ -15,22 +15,22 @@ bool util::isValidURL(std::string strUrl){
 			return true;
 		}
 	} catch (boost::regex_error& e) {
-		cerr << "The URL regexp is invalid!" << endl;
+		std::cerr << "The URL regexp is invalid!" << std::endl;
 		throw(e);
 	}
 	return true;
 }
 
 
-double util::interpolate(double x, vector< pair<double, double> > &table) {
+double util::interpolate(double x, std::vector< std::pair<double, double> > &table) {
 	const double INF = 1.e100;
 	// Assumes that "table" is sorted by .first
 	// Check if x is out of bound
 	if (x > table.back().first) return INF;
 	if (x < table[0].first) return -INF;
-	vector<pair<double, double> >::iterator it, it2;
+	std::vector<std::pair<double, double> >::iterator it, it2;
 	// INFINITY is defined in math.h in the glibc implementation
-	it = lower_bound(table.begin(), table.end(), make_pair(x, -INF));
+	it = lower_bound(table.begin(), table.end(), std::make_pair(x, -INF));
 	// Corner case
 	if (it == table.begin()) return it->second;
 	it2 = it;
@@ -38,13 +38,13 @@ double util::interpolate(double x, vector< pair<double, double> > &table) {
 	return it2->second + (it->second - it2->second)*(x - it2->first)/(it->first - it2->first);
 }
 
-void util::makeBezier(double gamma, double contrast, int N_SEG, vector<int> &lutX, vector<int> &lutY){
+void util::makeBezier(double gamma, double contrast, int N_SEG, std::vector<int> &lutX, std::vector<int> &lutY){
 	/*for(int i=0;i<N_SEG;i++){	
 		lutX[i] = i;
 		lutY[i] = i;
 	}*/
 
-	//cout << "inside makeBezier(" << gamma << "," << contrast << "," << N_SEG << ")" << endl;
+	//std::cout << "inside makeBezier(" << gamma << "," << contrast << "," << N_SEG << ")" << std::endl;
 	//Gamma    values are in double from [-1 to 1], 0 being neutral
 	//Contrast values are in double from [-1 to 1], 0 being neutral
 	//Contrast values increase
@@ -68,10 +68,10 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, vector<int> &lut
 	double y2=N_SEG-x2;
 	double y3=N_SEG-x3;
 
-	//cout << "Calculating bezier.." << endl;
+	//std::cout << "Calculating bezier.." << std::endl;
 	//cubic_bezier(x1, y1, x2, y2, x3, y3, x4, y4, N_SEG, xarr, yarr);
 
-	vector<pair<double, double> > table;
+	std::vector< std::pair<double, double> > table;
 	for (int i=0; i < N_SEG; i++){
 		double t = (double)i / (double)(N_SEG-1);
 
@@ -83,12 +83,12 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, vector<int> &lut
 		double x = a * x1 + b * x2 + c * x3 + d * x4;
 		double y = a * y1 + b * y2 + c * y3 + d * y4;
 
-		//std::cout << "i" << i << " (x,y)=(" << x << "," << y << ")" << std::endl;
-		//std::cout << x << "," << y << std::endl;
+		//std::cout << "i" << i << " (x,y)=(" << x << "," << y << ")" << std::std::endl;
+		//std::cout << x << "," << y << std::std::endl;
 
 		//xarr[i]=x;
 		//yarr[i]=y;
-		table.push_back(make_pair(x,y));		
+		table.push_back(std::make_pair(x,y));		
 		//pts[i][0] = x;
 		//pts[i][1] = y;
 		//return pts;
@@ -96,17 +96,17 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, vector<int> &lut
 
 
 
-	//cout << "Sucesfully constructed bezier.." << endl;
+	//std::cout << "Sucesfully constructed bezier.." << std::endl;
 
-	//cout << "Constructing bezier interpolation table.." << endl;
+	//std::cout << "Constructing bezier interpolation table.." << std::endl;
 
 	//for(int i=0;i<N_SEG;i++){	
 		
 		//sort(table.begin(), table.end()); //We have a span so sorting is not neccesary
 	//}
-	//cout << "Interpolation table filled in.."
+	//std::cout << "Interpolation table filled in.."
 
-	//cout << "Interpolating.." << endl;
+	//std::cout << "Interpolating.." << std::endl;
 	int value;	
 	for(int i=0;i<N_SEG;i++){	
 		lutX[i] = i;
@@ -116,9 +116,9 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, vector<int> &lut
 		value = (value > (N_SEG-1) )? N_SEG-1 : value; //values above N_SEG-1 should be N_SEG-1
 		lutY[i] = value;
 		
-		//cout << i << "," << interpolate(double(i),table) << endl; 
+		//std::cout << i << "," << interpolate(double(i),table) << std::endl; 
 	}
-	//cout << "Interpolation done, discrete (x) bezier constructed." << endl;
+	//std::cout << "Interpolation done, discrete (x) bezier constructed." << std::endl;
 }
 
 
@@ -128,7 +128,7 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, int lutX[], int 
 		lutY[i] = i;
 	}*/
 
-	//cout << "inside makeBezier(" << gamma << "," << contrast << "," << N_SEG << ")" << endl;
+	//std::cout << "inside makeBezier(" << gamma << "," << contrast << "," << N_SEG << ")" << std::endl;
 	//Gamma    values are in double from [-1 to 1], 0 being neutral
 	//Contrast values are in double from [-1 to 1], 0 being neutral
 	//Contrast values increase
@@ -152,10 +152,10 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, int lutX[], int 
 	double y2=N_SEG-x2;
 	double y3=N_SEG-x3;
 
-	//cout << "Calculating bezier.." << endl;
+	//std::cout << "Calculating bezier.." << std::endl;
 	//cubic_bezier(x1, y1, x2, y2, x3, y3, x4, y4, N_SEG, xarr, yarr);
 
-	vector<pair<double, double> > table;
+	std::vector< std::pair<double, double> > table;
 	for (int i=0; i < N_SEG; i++){
 		double t = (double)i / (double)(N_SEG-1);
 
@@ -167,12 +167,12 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, int lutX[], int 
 		double x = a * x1 + b * x2 + c * x3 + d * x4;
 		double y = a * y1 + b * y2 + c * y3 + d * y4;
 
-		//std::cout << "i" << i << " (x,y)=(" << x << "," << y << ")" << std::endl;
-		//std::cout << x << "," << y << std::endl;
+		//std::cout << "i" << i << " (x,y)=(" << x << "," << y << ")" << std::std::endl;
+		//std::cout << x << "," << y << std::std::endl;
 
 		//xarr[i]=x;
 		//yarr[i]=y;
-		table.push_back(make_pair(x,y));		
+		table.push_back(std::make_pair(x,y));		
 		//pts[i][0] = x;
 		//pts[i][1] = y;
 		//return pts;
@@ -180,17 +180,17 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, int lutX[], int 
 
 
 
-	//cout << "Sucesfully constructed bezier.." << endl;
+	//std::cout << "Sucesfully constructed bezier.." << std::endl;
 
-	//cout << "Constructing bezier interpolation table.." << endl;
+	//std::cout << "Constructing bezier interpolation table.." << std::endl;
 
 	//for(int i=0;i<N_SEG;i++){	
 		
 		//sort(table.begin(), table.end()); //We have a span so sorting is not neccesary
 	//}
-	//cout << "Interpolation table filled in.."
+	//std::cout << "Interpolation table filled in.."
 
-	//cout << "Interpolating.." << endl;
+	//std::cout << "Interpolating.." << std::endl;
 	int value;	
 	for(int i=0;i<N_SEG;i++){	
 		lutX[i] = i;
@@ -200,9 +200,9 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, int lutX[], int 
 		value = (value > (N_SEG-1) )? N_SEG-1 : value; //values above N_SEG-1 should be N_SEG-1
 		lutY[i] = value;
 		//lutY[i] = i; //FIXME
-		//cout << i << "," << interpolate(double(i),table) << endl; 
+		//std::cout << i << "," << interpolate(double(i),table) << std::endl; 
 	}
-	//cout << "Interpolation done, discrete (x) bezier constructed." << endl;
+	//std::cout << "Interpolation done, discrete (x) bezier constructed." << std::endl;
 }
 
 
@@ -236,7 +236,7 @@ void util::logASL(std::string strMsg){
     asl_log(log_client, NULL, ASL_LEVEL_ERR, strMsg.c_str());
     asl_close(log_client);
   #else
-    cerr << "logASL(" << strMsg << ")" << endl;
+    std::cerr << "logASL(" << strMsg << ")" << std::endl;
   #endif
 }
 
@@ -263,56 +263,57 @@ std::string util::escapeRegex(std::string str) {
 
 
 std::string util::regex_escape(const std::string& string_to_escape) {
-  static const boost::regex re_boostRegexEscape( "[\\^\\.\\$\\|\\(\\)\\[\\]\\*\\+\\?\\/\\\\]" );
-  const std::string rep( "\\\\\\1&" );
-  std::string result = regex_replace(string_to_escape, re_boostRegexEscape, rep, boost::match_default | boost::format_sed);
-  return result;
+	static const boost::regex re_boostRegexEscape( "[\\^\\.\\$\\|\\(\\)\\[\\]\\*\\+\\?\\/\\\\]" );
+	const std::string rep( "\\\\\\1&" );
+	std::string result = regex_replace(string_to_escape, re_boostRegexEscape, rep, boost::match_default | boost::format_sed);
+	return result;
 }
 
 
 
 int util::xfilelength(int fd){ //is static in .h
-  struct stat sb;
-  if (fstat(fd, &sb) < 0)
-    return(-1);
-  return(sb.st_size);
+	struct stat sb;
+	if (fstat(fd, &sb) < 0){
+		return(-1);
+	}
+	return(sb.st_size);
 }
 
 
 std::string util::fileformatToRegex(std::string fileformat ){
-  //Escape chars for regex first..
-  //Change {%04d} to \d{4}
-  //Change {datamatrix} to .*
-  //Change {manual} to .*
+	//Escape chars for regex first..
+	//Change {%04d} to \d{4}
+	//Change {datamatrix} to .*
+	//Change {manual} to .*
 
-  string strRegex;
-  
-  if (fileformat.size() < 2){
-    cout << "Input fileformat too small (" << fileformat.size() << "). Returning." << endl;
-    return strRegex;
-  }
+	std::string strRegex;
 
-  //First escape the regex
-  strRegex = regex_escape(fileformat);
-  cout << "fileformat=" << fileformat << endl;
-  cout << "strRegex=" << strRegex << endl;
+	if (fileformat.size() < 2){
+	std::cout << "Input fileformat too small (" << fileformat.size() << "). Returning." << std::endl;
+	return strRegex;
+	}
 
-
-  boost::regex regex_num("\\{(%[0-9]*d)\\}");
-  strRegex = boost::regex_replace(strRegex, regex_num, "\\\\d{4}");//TODO use good amount of digits
-  cout << "strRegex=" << strRegex << endl;
-
-  //boost::regex regex_anyBrace("\\{(.*?)\\}");
-  boost::regex regex_anyBrace("(?<!\\\\d)\\{(.*?)\\}");//(?<!\\d){(.*?)}
-  strRegex = boost::regex_replace(strRegex, regex_anyBrace, ".*");
-
-  cout << "strRegex=" << strRegex << endl;
-  
-  //Now put a a priory regex in
-  //strRegex.insert(0, ".*"); //Accept any prependage
+	//First escape the regex
+	strRegex = regex_escape(fileformat);
+	std::cout << "fileformat=" << fileformat << std::endl;
+	std::cout << "strRegex=" << strRegex << std::endl;
 
 
-  return strRegex;
+	boost::regex regex_num("\\{(%[0-9]*d)\\}");
+	strRegex = boost::regex_replace(strRegex, regex_num, "\\\\d{4}");//TODO use good amount of digits
+	std::cout << "strRegex=" << strRegex << std::endl;
+
+	//boost::regex regex_anyBrace("\\{(.*?)\\}");
+	boost::regex regex_anyBrace("(?<!\\\\d)\\{(.*?)\\}");//(?<!\\d){(.*?)}
+	strRegex = boost::regex_replace(strRegex, regex_anyBrace, ".*");
+
+	std::cout << "strRegex=" << strRegex << std::endl;
+
+	//Now put a a priory regex in
+	//strRegex.insert(0, ".*"); //Accept any prependage
+
+
+	return strRegex;
 }
 
 
@@ -339,77 +340,77 @@ std::string util::ReplaceAll(std::string str, const std::string& from, const std
     return str;
 }
 
-vector<string> util::getRegexMatches(std::string strRegex, std::string strMatches){
-  cout << "getRegexMatches(" << strRegex << "," << strMatches << ")" << endl;
-  vector<string> vecMatches;
-  boost::regex e(strRegex); 
-  std::string chat_input(strMatches);
-  boost::match_results<std::string::const_iterator> results;
-  if (boost::regex_match(chat_input, results, e)){
-    for (int i=1; i<results.size(); i++){
-      vecMatches.push_back(results[i]);
-    }
-  }
-  for (int i=0;i<vecMatches.size();i++){
-    cout << "vecMatches[" << i << "]=" << vecMatches[i] << endl;
-  }
-  return vecMatches;
+std::vector<std::string> util::getRegexMatches(std::string strRegex, std::string strMatches){
+	std::cout << "getRegexMatches(" << strRegex << "," << strMatches << ")" << std::endl;
+	std::vector<std::string> vecMatches;
+	boost::regex e(strRegex); 
+	std::string chat_input(strMatches);
+	boost::match_results<std::string::const_iterator> results;
+	if (boost::regex_match(chat_input, results, e)){
+		for (int i=1; i<results.size(); i++){
+			vecMatches.push_back(results[i]);
+		}
+	}
+	for (int i=0; i<vecMatches.size(); i++){
+		std::cout << "vecMatches[" << i << "]=" << vecMatches[i] << std::endl;
+	}
+	return vecMatches;
 }
 
 
 
 std::map<std::string, std::string> util::relateFormatAndFile(std::string strFormat, std::string strFilename){
   // ex: relateFormatAndFile("/tif/{var}_{\%04d}.tif","/home/bla/tif/test_01234.tif");
-  cout << "relateFormatAndFile(" << strFormat << ", " << strFilename << ")" << endl;
+  std::cout << "relateFormatAndFile(" << strFormat << ", " << strFilename << ")" << std::endl;
   std::map<std::string, std::string> mapFormatAndFile;
 
-  string strFormatEsc, strFilenameEsc;
+  std::string strFormatEsc, strFilenameEsc;
 
   //Escape the strings
   strFormatEsc = escapeRegex(strFormat);
 
-  cout << "Escaped = " << strFormatEsc << ", " << strFilename << "" << endl;
+  std::cout << "Escaped = " << strFormatEsc << ", " << strFilename << "" << std::endl;
 
 
   //    \/tif\/\{var\}_\{%04d\}\.tif
   boost::regex regex_num(".\\{(.*?)\\}");
-  string strFormatRx;
+  std::string strFormatRx;
   strFormatEsc = ".*"+strFormatEsc; //Match any prefix (like hotfolder dir etc)
   strFormatRx = boost::regex_replace(strFormatEsc, regex_num, "(.*?)"); //TODO get correct amount of numbers    ->THIS CRASHES ON UBUNTU+NLS?
-  cout << "strFormatRx=" << strFormatRx << endl;
+  std::cout << "strFormatRx=" << strFormatRx << std::endl;
 
 
-    vector<string> vecMatchesFormat = getRegexMatches(strFormatRx, strFormat);
-    vector<string> vecMatchesFilename = getRegexMatches(strFormatRx, strFilename);
+    std::vector<std::string> vecMatchesFormat = getRegexMatches(strFormatRx, strFormat);
+    std::vector<std::string> vecMatchesFilename = getRegexMatches(strFormatRx, strFilename);
 
     if (vecMatchesFormat.size() != vecMatchesFilename.size()){
-      cout << "vecMatches sizes do not correspond, returning." << endl;
+      std::cout << "vecMatches sizes do not correspond, returning." << std::endl;
       return mapFormatAndFile; //No match here.
     }
 
   for (int i=0;i<vecMatchesFormat.size();i++){
-    cout << vecMatchesFormat[i] << "=" << vecMatchesFilename[i] << endl;
+    std::cout << vecMatchesFormat[i] << "=" << vecMatchesFilename[i] << std::endl;
     mapFormatAndFile[vecMatchesFormat[i]] = vecMatchesFilename[i];
   }
 
-  //cout << " === END relateFormatAndFile()" << endl;
+  //std::cout << " === END relateFormatAndFile()" << std::endl;
   return mapFormatAndFile;
 }
 
 
 
 std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string> vecFormats, std::string filename, int numAdd, int &numNow, std::vector<std::string> &vecNumFormats){
-	cout << "correlateFileVectorFormat(.., filename=" << filename << ")" << endl;
+	std::cout << "correlateFileVectorFormat(.., filename=" << filename << ")" << std::endl;
 	//vecNumFormats is everything in the format replaced except the actual number;
 	//numNow is the current number, numAdd is the number to be added.
 
 	std::map<std::string, std::string> mapFormatToFile;
 	for (int i=0; i< vecFormats.size();i++){
-		cout << vecFormats[i] << endl;
+		std::cout << vecFormats[i] << std::endl;
 		mapFormatToFile = relateFormatAndFile(vecFormats[i], filename);
-		cout << "map size=" << mapFormatToFile.size() << endl;
+		std::cout << "map size=" << mapFormatToFile.size() << std::endl;
 		//foreach(auto i, mapFormatToFile){
-		//  cout << boost::format("%d = %s\n") % i.first % i.second;
+		//  std::cout << boost::format("%d = %s\n") % i.first % i.second;
 		//}
 		if (mapFormatToFile.size()>0){
 			break; //We found it, only 1 match is possible because we chose 1 filename obviously.
@@ -417,15 +418,15 @@ std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string
 	}
 
 	if (mapFormatToFile.size()==0){
-		cout << "mapFormatToFile.size()==0 !" << endl;
+		std::cout << "mapFormatToFile.size()==0 !" << std::endl;
 		return vecFormats;
 	}
 
 	vecNumFormats = vecFormats;
-	string number_string;
+	std::string number_string;
 	/*
 	foreach(auto i, mapFormatToFile){
-		cout << boost::format("%d = %s\n") % i.first % i.second;
+		std::cout << boost::format("%d = %s\n") % i.first % i.second;
 		if (i.first[1]=='%' && i.first[i.first.length()-2]=='d'){ //Skip .%*d. files (numberformats)
 			number_string = i.second;
 			continue;
@@ -442,7 +443,7 @@ std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string
 		// i->first = key
 		// i->second = value
 	
-		cout << boost::format("%d = %s\n") % i->first % i->second;
+		std::cout << boost::format("%d = %s\n") % i->first % i->second;
 		if (i->first[1]=='%' && i->first[i->first.length()-2]=='d'){ //Skip .%*d. files (numberformats)
 			number_string = i->second;
 			continue;
@@ -451,7 +452,7 @@ std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string
 	}
 
 	for (int i=0; i<vecNumFormats.size(); i++){
-		cout << "vecNumFormats[" << i << "]=" << vecNumFormats[i] << endl;
+		std::cout << "vecNumFormats[" << i << "]=" << vecNumFormats[i] << std::endl;
 	}
 
 
@@ -459,31 +460,31 @@ std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string
 	//vecNumFormats = regexReplaceInVector(vecFormats, barcode_now, "\\{datamatrix\\}");
 
 	//string number_string  = getNumberFromFileFormat(vecNumFormats[formatID], filename);
-	cout << "number_string=" << number_string << endl;
+	std::cout << "number_string=" << number_string << std::endl;
 
 	numNow = boost::lexical_cast<int>( number_string ) +numAdd;
 
 	if (numAdd!=0){
-		string strSize = boost::lexical_cast<string>(number_string.size());
-		string strNumFormat = "%0"+ strSize +"i";  //Makes the format the same size as string number
+		std::string strSize = boost::lexical_cast<std::string>(number_string.size());
+		std::string strNumFormat = "%0"+ strSize +"i";  //Makes the format the same size as string number
 		number_string = boost::str(boost::format(strNumFormat.c_str()) % (numNow));
 	}
 
 	//Now fill in the extracted variables in the vecFILENAMING vector.
 	vecFormats = regexReplaceInVector(vecNumFormats, number_string, "\\{(%[0-9]*d)\\}");
 
-	//cout << " === SUCCESS correlateFileVectorFormat()" << endl;
+	//std::cout << " === SUCCESS correlateFileVectorFormat()" << std::endl;
 	return vecFormats;
 }
 
 
-std::vector<std::string> util::folderFilesToVector(string folder){
-	vector<string> vecFileNames;
-	fs::path directory(folder);
-	fs::directory_iterator iter(directory), end;
+std::vector<std::string> util::folderFilesToVector(std::string folder){
+	std::vector<std::string> vecFileNames;
+	boost::filesystem::path directory(folder);
+	boost::filesystem::directory_iterator iter(directory), end;
 	for(;iter != end; ++iter){
 		//if (iter->path().extension() == ".*"){
-		string file = iter->path().filename().string();
+		std::string file = iter->path().filename().string();
 		vecFileNames.push_back(file);
 	}
 	return vecFileNames;
