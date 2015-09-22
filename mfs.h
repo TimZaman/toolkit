@@ -33,9 +33,9 @@ Additions: Eric Bruneton, Antoine Begault, Guillaume Piolat, Tim Zaman
 */
 
 typedef struct {
-    char *buf;        /* Memory for open buf */
+    char *buf = NULL;        /* Memory for open buf */
     long  buf_off;    /* File pointer for each buf */
-    long  buf_size;   /* Count of bytes allocated for each buf */
+    long  buf_size = 0;   /* Count of bytes allocated for each buf */
     int   buf_mode;   /* Mode of buffer (r, w, a) */
     bool  buf_open;
 } mfs_file;

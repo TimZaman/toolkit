@@ -65,6 +65,7 @@ void sort(
 
 // This implementation is O(n), but also uses O(n) extra memory
 template< class T >
+
 void reorder(
   std::vector<T> & unordered,
   std::vector<size_t> const & index_map,
