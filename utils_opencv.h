@@ -8,47 +8,33 @@
 #ifndef UTILS_OPENCV_TIM_H
 #define UTILS_OPENCV_TIM_H
 
+#include <iomanip>
 #include <iostream>
 #include <stdio.h> //file streams
 #include <string>
+#include <vector>
 #include <clocale>
-
 #include <fcntl.h>
-#include <pthread.h> //Multithreading (GTK)
-
 #include <time.h>
-
+#include <sys/types.h>
+#include <sys/stat.h> //mkdir
 #include <sys/statvfs.h> //Free disk space checker
-
+#include <unistd.h>
+#include <pwd.h>
+#include <cstdlib>
+#include <dirent.h> //dir listing
 
 #ifndef Q_MOC_RUN
-	#include <boost/program_options.hpp> //libboost-dev, libboost-1.53-all-dev
 	#include <boost/filesystem.hpp>
 	#include <boost/lexical_cast.hpp> //int to std:string conversion
 	#include <boost/format.hpp>
-	//#include <boost/thread/thread.hpp> //for this::thread::sleep
 	#include <boost/variant.hpp>
 	#include <boost/regex.hpp>	
 	#include <boost/foreach.hpp>
 #endif
 
 
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <unistd.h>
-#include <pwd.h>
-
-#include <iomanip>
-#include <cstdlib>
-#include <sys/stat.h> //mkdir
-#include <dirent.h> //dir listing
-
-
 #include <opencv2/opencv.hpp>
-
-
-#include <vector>
 
 #include <libexif/exif-data.h> //libexif-dev
 #include <exiv2/exiv2.hpp> //libexiv2-dev
@@ -57,10 +43,6 @@
 	#include <asl.h> //Apple System Logger API
 #endif
 
-
-using namespace std;
-namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 namespace util{
 

@@ -2,6 +2,11 @@
 #define CZOUT_h
 
 
+#include <mutex>
+#include <string>
+#include <iostream> //cout, cerr, cin
+
+
 #define RESET   "\033[0m"
 #define BOLD    "\033[1m"
 #define BLACK   "\033[30m"
@@ -39,7 +44,7 @@ struct czout_printer {
     */
     void print(std::string str){
         std::lock_guard<std::mutex> guard(mutex);
-        cout << str;
+        std::cout << str;
     }
 
 	/**
@@ -48,12 +53,13 @@ struct czout_printer {
     void println(std::string str, int verbosity){
         std::lock_guard<std::mutex> guard(mutex);
         if (verbosity<=verbose){
-	        cout << str << endl;
+	        std::cout << str << std::endl;
 	    }
     }
 
     int verbose=1;
 };
+
 
 /*! 
  * \brief czout
@@ -124,7 +130,7 @@ class czout {
 		czout& operator << (std::ostream&(*pManip)(std::ostream&)){
 			//Write and flush it out
 			//Construct the full string
-			string line = color + prefix + COLRESET + allStr;
+			std::string line = color + prefix + COLRESET + allStr;
 			t_pzout_printer->println(line, verbose);
 			//And reset the data
 			allStr = "";
@@ -139,22 +145,21 @@ class czout {
 
 
 		void setColor(int id){
-			vector<string> VECCOLSTR; //TODO: this can be more static, global and made generally less cumbersome
+			std::vector<std::string> VECCOLSTR; //TODO: this can be more static, global and made generally less cumbersome
 			VECCOLSTR.resize(5);
 			VECCOLSTR[0] = CYAN;
 			VECCOLSTR[1] = GREEN;
 			VECCOLSTR[2] = YELLOW;
 			VECCOLSTR[3] = BLUE;
 			VECCOLSTR[4] = MAGENTA;
-			//VECCOLSTR[5] = RED; // Red is used for warnings..
 			this->color = VECCOLSTR[id % VECCOLSTR.size()]; //Pick sequentially changing color per ID
 		}
 
 	private:
 		czout_printer * t_pzout_printer = NULL; //The interface that actually prints
-		string allStr; //All data is concatenated here
-		string prefix = "[UNSET]"; //The thing that's written before each string
-		string color = "";
+		std::string allStr; //All data is concatenated here
+		std::string prefix = "[UNSET]"; //The thing that's written before each string
+		std::string color = "";
 };
 
 

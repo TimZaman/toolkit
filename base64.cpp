@@ -5,10 +5,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <stdlib.h>
 
-using namespace std;
 
 static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
