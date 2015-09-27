@@ -57,7 +57,7 @@ struct czout_printer {
 	    }
     }
 
-    int verbose=0;
+    int verbose = 1; //Default verbosity of a call (0=very important)
 };
 
 
@@ -65,6 +65,7 @@ struct czout_printer {
  * \brief czout
  *
  * Interface for clean verbose printing, need a printer to make this work, see czout_printer
+ * There can be many czout classes hooked into one printer.
  * \author Tim Zaman
  *
  */
@@ -85,7 +86,7 @@ class czout {
 			this->t_pzout_printer = my_pzout_printer;
 		}
 
-		int verbose = 1;
+		int verbose = 1; //Default verbosity of a call (0=very important)
 
 
 	
