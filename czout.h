@@ -37,7 +37,7 @@
 */
 
 struct czout_printer {
-    std::mutex mutex;
+	std::mutex mutex;
 
     /**
     * Prints a complete uninterruptable string without line ending
