@@ -95,9 +95,9 @@
 	#include <asl.h> //Apple System Logger API
 #endif
 
-#include "toolkit/sort.h"
-#include "toolkit/utils_opencv.h"
-#include "toolkit/utils_general.h"
+#include "sort.h"
+#include "utils_opencv.h"
+#include "utils_general.h"
 
 
 using zxing::Ref;
