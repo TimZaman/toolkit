@@ -112,6 +112,11 @@ class czout {
 			return *this;
 		};
 
+		czout& operator << (unsigned int data)  {
+			allStr += std::to_string(data);
+			return *this;
+		};
+
 		czout& operator << (unsigned long data)  {
 			allStr += std::to_string(data);
 			return *this;
