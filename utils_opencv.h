@@ -47,6 +47,7 @@
 namespace util{
 
 	//OpenCV related
+	double pts2angleDeg(cv::Point, cv::Point);
 	cv::Mat crop(cv::Mat src, cv::RotatedRect rRect);
 	void rot90(cv::Mat &matImage, int rotflag);
 	void autoClipBrighten(cv::Mat &matImage, double percentile_lower, double percentile_upper);

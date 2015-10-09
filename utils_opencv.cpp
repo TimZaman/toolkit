@@ -3,6 +3,17 @@
 #include "utils_opencv.h"
 
 
+
+double util::pts2angleDeg(cv::Point pt1, cv::Point pt2){
+	double angledeg=atan2(double(pt2.y-pt1.y),double(pt2.x-pt1.x))*180.0/M_PI;
+	return angledeg;
+	//      -90
+	// -180 \|/  -0
+	//      -o-
+	//  +0  /|\   180
+	//      +90
+}
+
 //OpenCV related
 cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 
