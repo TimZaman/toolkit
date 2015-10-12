@@ -4,6 +4,28 @@
 
 //using namespace fs = boost::filesystem;
 
+
+double util::calcMedian(std::vector<double> scores){ //calculates median
+  double median=0;
+
+  size_t size = scores.size();
+
+  if (scores.size()==0) {
+  	std::cerr << "Warning! Empty vector in calcMedian!" << std::endl;
+  	return 0;
+  }
+  
+  sort(scores.begin(), scores.end());
+
+  if (size  % 2 == 0){
+      median = (scores[size / 2 - 1] + scores[size / 2]) / 2;
+  } else {
+      median = scores[size / 2];
+  }
+
+  return median;
+}
+
 bool util::isValidURL(std::string strUrl){
 	try
 	{
