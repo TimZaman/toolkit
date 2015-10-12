@@ -65,6 +65,7 @@ namespace util{
 	enum enumSavetype{ SAVE_TIFF=0, SAVE_JPEG=1, SAVE_JP2=2, SAVE_RAW=3};
 
 	// === FUNCTIONS === //
+	double calcMedian(std::vector<double> scores);
 	bool isValidURL(std::string);
 
 	void logASL(std::string);
