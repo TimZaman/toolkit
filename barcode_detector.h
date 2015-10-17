@@ -100,13 +100,6 @@
 #include "utils_general.h"
 
 
-using zxing::Ref;
-using zxing::ArrayRef;
-using zxing::LuminanceSource;
-using namespace zxing;
-using namespace datamatrix;
-using namespace zxing::datamatrix;
-
 
 
 namespace bc {

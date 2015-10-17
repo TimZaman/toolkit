@@ -2,6 +2,8 @@
 
 #include "utils_qt_opencv.h"
 
+using namespace std;
+
 //OpenCV *AND* Qt related
 QImage util::Mat2QImage(const cv::Mat3b &src) {
 	QImage dest(src.cols, src.rows, QImage::Format_ARGB32);

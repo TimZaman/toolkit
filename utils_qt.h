@@ -22,8 +22,6 @@
 #include <clocale>
 
 
-using namespace std;
-
 
 namespace util{
 

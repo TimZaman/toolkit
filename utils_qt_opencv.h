@@ -30,7 +30,7 @@
 #include <opencv2/opencv.hpp>
 
 
-using namespace std;
+
 
 namespace util{
 	QImage Mat2QImage(const cv::Mat3b &); //Opencv and Qt
