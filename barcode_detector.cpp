@@ -5,6 +5,14 @@ using namespace std;
 using namespace cv;
 
 
+using zxing::Ref;
+using zxing::ArrayRef;
+using zxing::LuminanceSource;
+using namespace zxing;
+using namespace datamatrix;
+using namespace zxing::datamatrix;
+
+
 
 std::string bc::decode_pure_barcode(cv::Mat matImage){
 	cout << "bc::decode_pure_barcode()" << endl;

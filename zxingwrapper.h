@@ -10,11 +10,6 @@
 
 #pragma once
 
-//#include <string>
-//#include <fstream>
-//#include <iostream>
-//#include <vector>
-//using namespace cv;
 
 #include <opencv2/opencv.hpp>
 
