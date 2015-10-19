@@ -45,8 +45,12 @@
 
 
 namespace util{
-
 	//OpenCV related
+
+	cv::RotatedRect fixRotatedRect(cv::RotatedRect );
+	void rectangle(cv::Mat matImage, cv::RotatedRect rRect, cv::Scalar color, int thickness);
+	cv::Point2f rotatePoint(const cv::Point2f& inPoint, const cv::Point2f& center, const double& angRad);
+	cv::Point2f rotate2d(const cv::Point2f& inPoint, const double& angRad);
 	double pts2angleDeg(cv::Point, cv::Point);
 	cv::Mat crop(cv::Mat src, cv::RotatedRect rRect);
 	void rot90(cv::Mat &matImage, int rotflag);

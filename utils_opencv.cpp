@@ -4,6 +4,31 @@
 
 
 
+
+void util::rectangle(cv::Mat matImage, cv::RotatedRect rRect, cv::Scalar color, int thickness){
+	cv::Point2f rect_points[4]; 
+	rRect.points( rect_points );
+	for( int j = 0; j < 4; j++ ) {
+		line( matImage, rect_points[j], rect_points[(j+1)%4], color, thickness, 8 );
+	}
+}
+
+
+
+cv::Point2f util::rotate2d(const cv::Point2f& inPoint, const double& angRad)
+{
+    cv::Point2f outPoint;
+    //CW rotation
+    outPoint.x = std::cos(angRad)*inPoint.x - std::sin(angRad)*inPoint.y;
+    outPoint.y = std::sin(angRad)*inPoint.x + std::cos(angRad)*inPoint.y;
+    return outPoint;
+}
+
+cv::Point2f util::rotatePoint(const cv::Point2f& inPoint, const cv::Point2f& center, const double& angRad)
+{
+    return rotate2d(inPoint - center, angRad) + center;
+}
+
 double util::pts2angleDeg(cv::Point pt1, cv::Point pt2){
 	double angledeg=atan2(double(pt2.y-pt1.y),double(pt2.x-pt1.x))*180.0/M_PI;
 	return angledeg;
@@ -14,13 +39,28 @@ double util::pts2angleDeg(cv::Point pt1, cv::Point pt2){
 	//      +90
 }
 
+
+cv::RotatedRect util::fixRotatedRect(cv::RotatedRect rRect){
+	//Fixes a large angular rotation to a flip in width
+	cv::RotatedRect rRectNow = rRect;
+	if (rRectNow.angle < -45.) {
+		rRectNow.angle += 90.0;
+		std::swap(rRectNow.size.width, rRectNow.size.height);
+	} else  if (rRectNow.angle > 45.) {
+		rRectNow.angle -= 90.0;
+		std::swap(rRectNow.size.width, rRectNow.size.height);
+	}
+	return rRectNow;
+}
+
 //OpenCV related
 cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 
+	cv::RotatedRect rRectNow = fixRotatedRect(rRect);
 
 	//It's a rotatedrect, so first get the bounding box
 
-	cv::Rect rBounding = rRect.boundingRect();
+	cv::Rect rBounding = rRectNow.boundingRect();
 
 	//Constrain it
 	rBounding = constrainRectInSize(rBounding, matImage.size());
@@ -30,23 +70,21 @@ cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 	cv::Mat matBound = matImage(rBounding).clone();
 
 	//Now move the rotatedrect back by the part we have cropped off due to the bounding rect
-	//cv::RotatedRect rRectSmall = rRect - Point2f(2,2);//rBounding.tl();
-	
-	rRect.center = rRect.center - cv::Point2f(rBounding.x, rBounding.y); //add +0.5? or -0.5? or?
+	rRectNow.center = rRectNow.center - cv::Point2f(rBounding.x, rBounding.y); //add +0.5? or -0.5? or?
 
-	float angle = rRect.angle;
+	float angle = rRectNow.angle;
 
 	//Rotate around center
 	rotate(matBound, angle, matBound);
 	//imwrite("matBoundRot.png", matBound);
 
-	cv::Size rect_size = rRect.size;
+	cv::Size rect_size = rRectNow.size;
 	
 	//Account for rotation
-	if (rRect.angle < -45.) {
+	if (rRectNow.angle < -45.) {
 		angle += 90.0;
 		std::swap(rect_size.width, rect_size.height);
-	} else  if (rRect.angle > 45.) {
+	} else  if (rRectNow.angle > 45.) {
 		angle -= 90.0;
 		std::swap(rect_size.width, rect_size.height);
 	}
@@ -54,7 +92,7 @@ cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 
 	//Now we can crop, outward from the middle, with the size of the rotatedrect
 	cv::Mat matCrop;
-	getRectSubPix(matBound, rect_size, rRect.center, matCrop);
+	getRectSubPix(matBound, rect_size, rRectNow.center, matCrop);
 
 	return matCrop;
 
