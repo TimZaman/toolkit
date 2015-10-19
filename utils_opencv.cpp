@@ -5,7 +5,115 @@
 
 
 
+
+
+cv::Point util::rect2cp(cv::Rect rRect){
+	//Finds the center point of a rectangle
+	return cv::Point(rRect.x+rRect.width*0.5, rRect.y+rRect.height*0.5);
+}
+
+
+std::vector<cv::Point> util::vecrotrect2vecpt(std::vector<cv::RotatedRect> vecRotRect){
+	//Converts an array of RotatedRect's to an array of their center points.
+	std::vector<cv::Point> vecPts(vecRotRect.size());
+	for(int i=0; i<vecRotRect.size(); i++){
+		vecPts[i] = cv::Point(vecRotRect[i].center.x, vecRotRect[i].center.y);
+	}
+	return vecPts;
+}
+
+
+void util::addRecursive(std::vector<int> & group, int myid, std::vector< std::vector<int> > & vecCloseTo, std::vector<int> & alreadyInGroup){
+	//cout << "addRecursive(" << myid << "..)" << endl;
+	//'myid' is the current index we are iterating through
+
+	//Skip if i was already in group
+	for (int i=0; i<alreadyInGroup.size(); i++){
+		if (myid==alreadyInGroup[i]) {
+			return;
+		}
+	}
+	alreadyInGroup.push_back(myid); //Add myself to group
+
+	/*cout << myid << " will add [";
+	for (int i=0; i < vecCloseTo[myid].size(); i++){
+		cout << vecCloseTo[myid][i] <<" ";
+	}
+	cout << "]" << endl;*/
+
+
+	for (int i=0; i < vecCloseTo[myid].size(); i++){
+		int depnow = vecCloseTo[myid][i];
+		for (int i=0; i<alreadyInGroup.size(); i++){
+			if (depnow==alreadyInGroup[i]) {
+				continue;
+			}
+		}
+		group.push_back(depnow);
+		addRecursive(group, depnow, vecCloseTo, alreadyInGroup);
+	}
+}
+
+
+
+std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, int mindist){
+	//Groups points together through recursive chaining, using euclidean distance as metric
+	//Any point can only belong to one group
+	//mindist [px] minimal distance to any other group member
+	std::vector<std::vector<int> > vecPtGroups;
+
+	//cout << "vecPts.size()=" << vecPts.size() << endl;
+
+	std::vector< std::vector<int> > vecCloseTo(vecPts.size());
+	//First make a list of stuff anything is close to withing the distance
+	for (int i=0; i<vecPts.size();i++){
+		//vecCloseTo[i].push_back(i); //Itself
+		for (int j=i+1; j<vecPts.size();j++){
+		//for (int j=0; j<vecPts.size();j++){
+			double dist = util::pointDist(vecPts[i], vecPts[j]);
+			if (dist<mindist){
+				vecCloseTo[i].push_back(j);
+			}
+		}
+	}
+
+	//for (int i=0; i<vecCloseTo.size();i++){
+	//	cout << "#" << i << " : ";
+	//	for (int j=0; j<vecCloseTo[i].size(); j++){
+	//		cout << vecCloseTo[i][j] << " ";
+	//	}
+	//	cout << endl;
+	//}
+
+	std::vector<int> alreadyInGroup;
+	for (int i=0; i<vecCloseTo.size();i++){	
+		//Now we have to use an self-recursive 'Escher' statement to follow the rabbit down the hole
+		std::vector<int> group;
+		addRecursive(group, i, vecCloseTo, alreadyInGroup);
+		if (group.size()>0){
+			//Remove duplicates
+			std::sort( group.begin(), group.end());
+			group.erase( unique( group.begin(), group.end() ), group.end() );
+			
+			vecPtGroups.push_back(group);
+		}
+	}
+
+	std::cout << "vecPtGroups.size()=" << vecPtGroups.size() << std::endl;
+	for (int i=0; i<vecPtGroups.size(); i++){
+		std::cout << "vecPtGroups[" << i << "].size()=" << vecPtGroups[i].size() << std::endl;	
+	}
+
+	std::cout << "END groupPoints()" << std::endl;
+	return vecPtGroups;
+}
+
+
+
+
+
 void util::rectangle(cv::Mat matImage, cv::RotatedRect rRect, cv::Scalar color, int thickness){
+	//Draws a rectangle
 	cv::Point2f rect_points[4]; 
 	rRect.points( rect_points );
 	for( int j = 0; j < 4; j++ ) {
