@@ -47,6 +47,10 @@
 namespace util{
 	//OpenCV related
 
+	std::vector<cv::Point> vecrotrect2vecpt(std::vector<cv::RotatedRect> vecRotRect);
+	void addRecursive(std::vector<int> & group, int myid, std::vector< std::vector<int> > & vecCloseTo, std::vector<int> & alreadyInGroup);
+	std::vector<std::vector<int> > groupPoints(std::vector<cv::Point> vecPts, int mindist);
+	cv::Point rect2cp(cv::Rect rRect);
 	cv::RotatedRect fixRotatedRect(cv::RotatedRect );
 	void rectangle(cv::Mat matImage, cv::RotatedRect rRect, cv::Scalar color, int thickness);
 	cv::Point2f rotatePoint(const cv::Point2f& inPoint, const cv::Point2f& center, const double& angRad);
