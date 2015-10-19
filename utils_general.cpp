@@ -4,6 +4,18 @@
 
 //using namespace fs = boost::filesystem;
 
+double util::calcMean(std::vector<double> scores){ //calculates mean
+	if (scores.size()==0) {
+		std::cerr << "Warning! Empty vector in calcMedian!" << std::endl;
+		return 0;
+	}
+	double sum=0;
+	for (int i=0; i < scores.size(); i++){
+		sum += scores[i];
+	}
+	return sum/double(scores.size());
+}
+
 
 double util::calcMedian(std::vector<double> scores){ //calculates median
   double median=0;
