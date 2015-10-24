@@ -4,6 +4,106 @@
 
 
 
+cv::Rect util::constrainRectInSize(cv::Rect rCrop, cv::Size sImage){
+	cv::Rect rImage(cv::Point(0,0), sImage);
+	cv::Rect rIntersection =  rCrop & rImage;
+	return rIntersection;
+}
+
+
+cv::RotatedRect util::scale(cv::RotatedRect rRect, double scale){
+	return cv::RotatedRect(rRect.center*scale, cv::Size2f(rRect.size.width*scale, rRect.size.height*scale), rRect.angle);
+}
+
+
+cv::Rect util::retainCenterBlob(cv::Mat & matImage, int white_threshold){
+	cv::Rect bounding_rect;
+	//For 'Vrijstaand maken'
+	cv::Mat matSmall;
+	double smallfact = 0.1; //formerly 0.2
+	cv::resize(matImage, matSmall, cv::Size(), smallfact, smallfact, cv::INTER_AREA);
+	cv::cvtColor(matSmall, matSmall, cv::COLOR_BGR2GRAY);
+
+	//imwrite("/Users/tzaman/Desktop/test.tif",matSmall);
+
+	cv::Mat matThres;
+	int thres_option = cv::THRESH_BINARY_INV; //INV for white
+	//int white_threshold = this->autocrop_threshold; //just use the same autocrop toggle
+	cv::threshold(matSmall, matThres, white_threshold, 255, thres_option);
+
+	//imwrite("/Users/tzaman/Desktop/matThres.tif",matThres);
+
+	//int largest_area=0;
+	//int largest_contour_index=0;
+	bool foundBlob=false;
+	std::vector< std::vector<cv::Point> > contours; // Vector for storing contour
+	std::vector< cv::Vec4i> hierarchy;
+	cv::findContours( matThres, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE ); // Find the contours in the image
+	for( int i = 0; i< contours.size(); i++ ) {// iterate through each contour. 
+		/*double a=contourArea( contours[i],false);  //  Find the area of contour
+		if(a>largest_area){
+			largest_area=a;
+			largest_contour_index=i;                //Store the index of largest contour
+			bounding_rect=boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
+		}*/
+
+		double pointInside = cv::pointPolygonTest(contours[i], cv::Point2f(matThres.cols*0.5, matThres.rows*0.5), false);
+		if (pointInside>0){//Is inside
+			bounding_rect=cv::boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
+			foundBlob=true;
+			//break;
+		}
+	}
+	//if (foundBlob){
+	//	cout << "Found a blob at:" <<  bounding_rect << endl;
+	//
+	//} else {
+	//	cout << WARNING << "Did NOT find blob. returning." << endl;
+	//}
+
+	return bounding_rect;
+}
+
+
+cv::Rect util::findBiggestBlob(cv::Mat & matImage){
+	int largest_area=0;
+	int largest_contour_index=0;
+	cv::Rect bounding_rect(cv::Point(0,0), matImage.size());
+	std::vector< std::vector<cv::Point> > contours; // Vector for storing contour
+	std::vector< cv::Vec4i> hierarchy;
+	cv::findContours( matImage, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE ); // Find the contours in the image
+	for( int i = 0; i< contours.size(); i++ ) {// iterate through each contour. 
+		double a=contourArea( contours[i],false);  //  Find the area of contour
+		if(a>largest_area){
+			largest_area=a;
+			largest_contour_index=i;                //Store the index of largest contour
+			bounding_rect=cv::boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
+		}
+	}
+	//drawContours( matImage, contours, largest_contour_index, Scalar(255), CV_FILLED, 8, hierarchy ); // Draw the largest contour using previously stored index.
+	return bounding_rect;
+}
+
+cv::RotatedRect util::findBiggestBlobRot(cv::Mat & matImage){
+	int largest_area=0;
+	int largest_contour_index=0;
+	cv::RotatedRect bounding_rotatedRect(cv::Point(0,0), matImage.size(),0);
+	std::vector< std::vector< cv::Point> > contours; // Vector for storing contour
+	std::vector< cv::Vec4i> hierarchy;
+	cv::findContours( matImage, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE ); // Find the contours in the image
+	for( int i = 0; i< contours.size(); i++ ) {// iterate through each contour. 
+		double a=cv::contourArea( contours[i],false);  //  Find the area of contour
+		if(a>largest_area){
+			largest_area=a;
+			largest_contour_index=i;                //Store the index of largest contour
+			bounding_rotatedRect=cv::minAreaRect(contours[i]);
+		}
+	}
+	//drawContours( matImage, contours, largest_contour_index, Scalar(255), CV_FILLED, 8, hierarchy ); // Draw the largest contour using previously stored index.
+	return bounding_rotatedRect;
+}
+
+
 
 cv::Point2f util::ptMove(cv::Point2f pt, double dist, double angle_deg){
 	double radians = angle_deg * M_PI / 180.0;
@@ -330,10 +430,5 @@ void util::rotate(cv::Mat& src, double angle, cv::Mat& dst){
     cv::warpAffine(src, dst, M, src.size(), cv::INTER_CUBIC); //Nearest is too rough, 
 }
 
-cv::Rect util::constrainRectInSize(cv::Rect rCrop, cv::Size sImage){
-  cv::Rect rImage(cv::Point(0,0), sImage);
-  cv::Rect rIntersection =  rCrop & rImage;
-  return rIntersection;
-}
 
 
