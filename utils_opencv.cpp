@@ -5,6 +5,12 @@
 
 
 
+cv::Point2f util::ptMove(cv::Point2f pt, double dist, double angle_deg){
+	double radians = angle_deg * M_PI / 180.0;
+	pt.x = pt.x + dist * cos(radians);
+	pt.y = pt.y + dist * sin(radians);	
+	return pt;
+}
 
 
 cv::Point util::rect2cp(cv::Rect rRect){
@@ -24,7 +30,7 @@ std::vector<cv::Point> util::vecrotrect2vecpt(std::vector<cv::RotatedRect> vecRo
 
 
 void util::addRecursive(std::vector<int> & group, int myid, std::vector< std::vector<int> > & vecCloseTo, std::vector<int> & alreadyInGroup){
-	//cout << "addRecursive(" << myid << "..)" << endl;
+	//std::cout << "addRecursive(" << myid << "..)" << std::endl;
 	//'myid' is the current index we are iterating through
 
 	//Skip if i was already in group
@@ -35,11 +41,11 @@ void util::addRecursive(std::vector<int> & group, int myid, std::vector< std::ve
 	}
 	alreadyInGroup.push_back(myid); //Add myself to group
 
-	/*cout << myid << " will add [";
-	for (int i=0; i < vecCloseTo[myid].size(); i++){
-		cout << vecCloseTo[myid][i] <<" ";
-	}
-	cout << "]" << endl;*/
+	//std::cout << myid << " will add [";
+	//for (int i=0; i < vecCloseTo[myid].size(); i++){
+	//	std::cout << vecCloseTo[myid][i] <<" ";
+	//}
+	//std::cout << "]" << std::endl;
 
 
 	for (int i=0; i < vecCloseTo[myid].size(); i++){
@@ -56,13 +62,13 @@ void util::addRecursive(std::vector<int> & group, int myid, std::vector< std::ve
 
 
 
-std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, int mindist){
+std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, double mindist, int mingroupsize){
 	//Groups points together through recursive chaining, using euclidean distance as metric
 	//Any point can only belong to one group
 	//mindist [px] minimal distance to any other group member
 	std::vector<std::vector<int> > vecPtGroups;
 
-	//cout << "vecPts.size()=" << vecPts.size() << endl;
+	std::cout << "vecPts.size()=" << vecPts.size() << std::endl;
 
 	std::vector< std::vector<int> > vecCloseTo(vecPts.size());
 	//First make a list of stuff anything is close to withing the distance
@@ -78,23 +84,35 @@ std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, 
 	}
 
 	//for (int i=0; i<vecCloseTo.size();i++){
-	//	cout << "#" << i << " : ";
+	//	std::cout << "#" << i << " : ";
 	//	for (int j=0; j<vecCloseTo[i].size(); j++){
-	//		cout << vecCloseTo[i][j] << " ";
+	//		std::cout << vecCloseTo[i][j] << " ";
 	//	}
-	//	cout << endl;
+	//	std::cout << std::endl;
 	//}
 
 	std::vector<int> alreadyInGroup;
 	for (int i=0; i<vecCloseTo.size();i++){	
+		for (int j=0; j<alreadyInGroup.size();j++){
+			if (i==alreadyInGroup[j]) continue;
+		}
+
+		//std::cout << std::endl << " = New Group = " << std::endl;
 		//Now we have to use an self-recursive 'Escher' statement to follow the rabbit down the hole
 		std::vector<int> group;
 		addRecursive(group, i, vecCloseTo, alreadyInGroup);
-		if (group.size()>0){
+
+		//std::cout << "Group now:" << std::endl;
+		//for (int j=0; j<group.size(); j++){
+		//	std::cout << group[j] << " ";
+		//}
+		//std::cout << std::endl;
+
+
+		if (group.size() > mingroupsize){
 			//Remove duplicates
 			std::sort( group.begin(), group.end());
 			group.erase( unique( group.begin(), group.end() ), group.end() );
-			
 			vecPtGroups.push_back(group);
 		}
 	}
