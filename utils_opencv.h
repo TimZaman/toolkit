@@ -47,6 +47,11 @@
 namespace util{
 	//OpenCV related
 
+	cv::Rect constrainRectInSize(cv::Rect rCrop, cv::Size sImage);
+	cv::RotatedRect scale(cv::RotatedRect, double);
+	cv::Rect findBiggestBlob(cv::Mat & matImage);
+	cv::RotatedRect findBiggestBlobRot(cv::Mat & matImage);
+	cv::Rect retainCenterBlob(cv::Mat & matImage, int);
 	cv::Point2f ptMove(cv::Point2f pt, double dist, double angle_deg);
 	std::vector<cv::Point> vecrotrect2vecpt(std::vector<cv::RotatedRect> vecRotRect);
 	void addRecursive(std::vector<int> & group, int myid, std::vector< std::vector<int> > & vecCloseTo, std::vector<int> & alreadyInGroup);
