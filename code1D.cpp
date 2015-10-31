@@ -9,7 +9,6 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){
 	cout << "readStripeCode()" << endl;
 	std::vector<stripeCode> vecStripecodes;
 
-	//bool debugstripecode = false;
 	bool debugstripecode = false;
 	bool useAdaptiveThersholding = true;
 
@@ -41,8 +40,6 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){
 	double bar_area_px_max = bar_height_px_max*(bar_height_px_max*1.0/bar_ar_min);
 
 	double bar_dist_group_px_max = bar_dist_group_mm_max/25.4*dpi;
-
-	
 
 	if (useAdaptiveThersholding){
 		//int AT_blocksize = dpi*0.05; 
@@ -109,15 +106,15 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){
 	}
 
 
-//TODO: OUTPUT CANDIDATESif (debugstripecode){
-//TODO: OUTPUT CANDIDATES	imwrite("/Users/tzaman/Desktop/bc/_" + barcode + ".tif", matBarcode2D);
-//TODO: OUTPUT CANDIDATES	Mat matBarcodeFull = matImage.clone();
-//TODO: OUTPUT CANDIDATES	util::rectangle(matBarcodeFull, rotRectBarcode, Scalar(50,255,50), 5);
-//TODO: OUTPUT CANDIDATES	for (int j=0; j<stripesVerified.size(); j++){
-//TODO: OUTPUT CANDIDATES		circle(matBarcodeFull, stripesVerified[j].center, 5, Scalar(50,50,255), 1, CV_AA,0);
-//TODO: OUTPUT CANDIDATES	}
-//TODO: OUTPUT CANDIDATES	imwrite("/Users/tzaman/Desktop/bc/_matBarcodeFull.tif", matBarcodeFull);
-//TODO: OUTPUT CANDIDATES}
+	//TODO: OUTPUT CANDIDATESif (debugstripecode){
+	//TODO: OUTPUT CANDIDATES	imwrite("/Users/tzaman/Desktop/bc/_" + barcode + ".tif", matBarcode2D);
+	//TODO: OUTPUT CANDIDATES	Mat matBarcodeFull = matImage.clone();
+	//TODO: OUTPUT CANDIDATES	util::rectangle(matBarcodeFull, rotRectBarcode, Scalar(50,255,50), 5);
+	//TODO: OUTPUT CANDIDATES	for (int j=0; j<stripesVerified.size(); j++){
+	//TODO: OUTPUT CANDIDATES		circle(matBarcodeFull, stripesVerified[j].center, 5, Scalar(50,50,255), 1, CV_AA,0);
+	//TODO: OUTPUT CANDIDATES	}
+	//TODO: OUTPUT CANDIDATES	imwrite("/Users/tzaman/Desktop/bc/_matBarcodeFull.tif", matBarcodeFull);
+	//TODO: OUTPUT CANDIDATES}
 
 
 	//cout << "stripeCandidates.size()=" << stripeCandidates.size() << endl;
@@ -281,8 +278,9 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){
 		}
 
 		//Binarize
-		util::autoClipBrighten(matBarcode1D,0.05,0.95);
-		threshold(matBarcode1D, matBarcode1D, 127, 255, THRESH_BINARY);
+		util::autoClipBrighten(matBarcode1D,0.06,0.94);
+		//threshold(matBarcode1D, matBarcode1D, 127, 255, THRESH_BINARY);
+		threshold(matBarcode1D, matBarcode1D, 165, 255, THRESH_BINARY);
 
 		if(debugstripecode){
 			imwrite("/Users/tzaman/Desktop/bc/bc2D_" + std::to_string(i) + ".tif", matBarcode2D);
