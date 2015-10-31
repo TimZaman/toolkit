@@ -47,6 +47,7 @@
 namespace util{
 	//OpenCV related
 
+	std::string matToJpgString(cv::Mat);
 	cv::Rect constrainRectInSize(cv::Rect rCrop, cv::Size sImage);
 	cv::RotatedRect scale(cv::RotatedRect, double);
 	cv::Rect findBiggestBlob(cv::Mat & matImage);

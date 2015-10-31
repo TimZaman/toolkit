@@ -4,6 +4,25 @@
 
 
 
+std::string util::matToJpgString(cv::Mat matImage){
+	//cout << "MatMeta::matToJpgString()" << endl;
+
+	//First check if i actually have data assigned.
+	if (matImage.data == NULL){
+		std::cout << "No image data." << std::endl;
+		return "";
+	}
+
+	std::vector<uchar> ubuf;
+	std::vector<int> properties;
+	imencode(".jpg", matImage, ubuf, properties);
+
+	std::string str(ubuf.begin(), ubuf.end());
+
+	return str;
+}
+
+
 cv::Rect util::constrainRectInSize(cv::Rect rCrop, cv::Size sImage){
 	cv::Rect rImage(cv::Point(0,0), sImage);
 	cv::Rect rIntersection =  rCrop & rImage;
