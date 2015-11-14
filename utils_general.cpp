@@ -60,7 +60,7 @@ double util::calcMedian(std::vector<double> scores){ //calculates median
 bool util::isValidURL(std::string strUrl){
 	try
 	{
-		boost::regex re("(ftp|http|https):\/\/.[0-9a-zA-Z:\/.%]*");
+		boost::regex re("(ftp|http|https):\/\/.[0-9a-zA-Z:\/.%_-]*");
 		if (!boost::regex_match(strUrl, re)){
 			//throw "Your URL is not formatted correctly!";
 			return false;
