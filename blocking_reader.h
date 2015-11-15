@@ -14,8 +14,8 @@
 //
 //
 
-#if !defined(EA_AAB97080_AA82_4a44_8EA5_1897E786FF55__INCLUDED_)
-#define EA_AAB97080_AA82_4a44_8EA5_1897E786FF55__INCLUDED_
+#ifndef BLOCKING_READER_H
+#define BLOCKING_READER_H
 
 #include <boost/asio/serial_port.hpp> 
 #include <boost/bind.hpp>
@@ -97,4 +97,4 @@ public:
 };
 
 
-#endif // !defined(EA_AAB97080_AA82_4a44_8EA5_1897E786FF55__INCLUDED_)
+#endif // BLOCKING_READER_H
