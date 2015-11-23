@@ -47,6 +47,8 @@
 namespace util{
 	//OpenCV related
 
+
+	void expand(cv::Rect & , double );
 	std::string matToJpgString(cv::Mat);
 	cv::Rect constrainRectInSize(cv::Rect rCrop, cv::Size sImage);
 	cv::RotatedRect scale(cv::RotatedRect, double);

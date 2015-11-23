@@ -23,12 +23,6 @@ std::string util::matToJpgString(cv::Mat matImage){
 }
 
 
-cv::Rect util::constrainRectInSize(cv::Rect rCrop, cv::Size sImage){
-	cv::Rect rImage(cv::Point(0,0), sImage);
-	cv::Rect rIntersection =  rCrop & rImage;
-	return rIntersection;
-}
-
 
 cv::RotatedRect util::scale(cv::RotatedRect rRect, double scale){
 	return cv::RotatedRect(rRect.center*scale, cv::Size2f(rRect.size.width*scale, rRect.size.height*scale), rRect.angle);
@@ -297,6 +291,14 @@ double util::pts2angleDeg(cv::Point pt1, cv::Point pt2){
 cv::RotatedRect util::fixRotatedRect(cv::RotatedRect rRect){
 	//Fixes a large angular rotation to a flip in width
 	cv::RotatedRect rRectNow = rRect;
+
+	//Get it as close to zero as possible
+	if (rRectNow.angle < -90.) {
+		rRectNow.angle += 180.0;
+	} else  if (rRectNow.angle > 90.) {
+		rRectNow.angle -= 180.0;
+	}
+
 	if (rRectNow.angle < -45.) {
 		rRectNow.angle += 90.0;
 		std::swap(rRectNow.size.width, rRectNow.size.height);
@@ -307,49 +309,90 @@ cv::RotatedRect util::fixRotatedRect(cv::RotatedRect rRect){
 	return rRectNow;
 }
 
-//OpenCV related
+
+void util::expand(cv::Rect & rBounding, double pixels){
+	//Expands a rectangle
+	double hpx = pixels*0.5;
+	rBounding = rBounding + cv::Size(pixels,pixels);
+	rBounding = rBounding - cv::Point(hpx,hpx);
+}
+
+
+cv::Rect util::constrainRectInSize(cv::Rect rRect, cv::Size sImage){
+	cv::Rect rImage(cv::Point(0,0), sImage);
+	cv::Rect rIntersection =  rRect & rImage;
+	return rIntersection;
+}
+
+
 cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 
+//	util::rectangle(matImage, rRect, cv::Scalar(255,0,0), 2);
+//	circle(matImage, rRect.center, 1, cv::Scalar(255,0,0));
+
 	cv::RotatedRect rRectNow = fixRotatedRect(rRect);
+
+//	util::rectangle(matImage, rRect, cv::Scalar(0,0,255), 1);
+
+//	imwrite("/Users/tzaman/Desktop/matImage.jpg", matImage);
 
 	//It's a rotatedrect, so first get the bounding box
 
 	cv::Rect rBounding = rRectNow.boundingRect();
 
+	//Now fix the bounding rectangle
+	if (rRectNow.size.width > rBounding.width){
+		std::cout << "width of crop wider than width of bb" << std::endl;
+		double d =rRectNow.size.width - rBounding.width; //Check out the difference
+		expand(rBounding, d);
+	}
+
+	if (rRectNow.size.height > rBounding.height){
+		std::cout << "height of crop wider than width of bb" << std::endl;
+		double d =rRectNow.size.height - rBounding.height; //Check out the difference
+		expand(rBounding, d);
+	}
+
+	std::cout << rBounding.tl() << std::endl;
+	std::cout << rBounding.br() << std::endl;
+
 	//Constrain it
-	rBounding = constrainRectInSize(rBounding, matImage.size());
+	cv::Rect rBoundingInside = constrainRectInSize(rBounding, matImage.size());
 
 	//Crop this off, and clone (because we rotate later)
+	cv::Mat matBound = matImage(rBoundingInside).clone();
+//	imwrite("/Users/tzaman/Desktop/matBound.jpg", matBound);
 
-	cv::Mat matBound = matImage(rBounding).clone();
+	//Not pad it if needed
+	int pad_top   = rBounding.tl().y < 0 ? -rBounding.tl().y : 0;
+	int pad_left  = rBounding.tl().x < 0 ? -rBounding.tl().x : 0;
+	int pad_right = rBounding.br().y >= matImage.rows ? rBounding.br().y-matImage.rows-1 : 0;
+	int pad_bot   = rBounding.br().x >= matImage.cols ? rBounding.br().x-matImage.rows-1 : 0;
+
+	//std::cout << pad_top << " " << pad_left << " " << pad_right << " " << pad_bot << std::endl;
+
+	if (pad_top > 0 || pad_left > 0 || pad_right > 0 || pad_bot > 0 ){
+		copyMakeBorder(matBound, matBound, pad_top, pad_bot, pad_left, pad_right, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
+//		imwrite("/Users/tzaman/Desktop/matBoundBorder.jpg", matBound);
+	}
 
 	//Now move the rotatedrect back by the part we have cropped off due to the bounding rect
 	rRectNow.center = rRectNow.center - cv::Point2f(rBounding.x, rBounding.y); //add +0.5? or -0.5? or?
 
-	float angle = rRectNow.angle;
+	//float angle = rRectNow.angle;
 
 	//Rotate around center
-	rotate(matBound, angle, matBound);
-	//imwrite("matBoundRot.png", matBound);
-
-	cv::Size rect_size = rRectNow.size;
-	
-	//Account for rotation
-	if (rRectNow.angle < -45.) {
-		angle += 90.0;
-		std::swap(rect_size.width, rect_size.height);
-	} else  if (rRectNow.angle > 45.) {
-		angle -= 90.0;
-		std::swap(rect_size.width, rect_size.height);
-	}
+	rotate(matBound, rRectNow.angle, matBound);
+//	imwrite("/Users/tzaman/Desktop/matBoundRot.jpg", matBound);
 
 
 	//Now we can crop, outward from the middle, with the size of the rotatedrect
 	cv::Mat matCrop;
-	getRectSubPix(matBound, rect_size, rRectNow.center, matCrop);
+	getRectSubPix(matBound, rRectNow.size, rRectNow.center, matCrop);
+
+//	imwrite("/Users/tzaman/Desktop/matCrop.jpg", matCrop);
 
 	return matCrop;
-
 }
 
 
