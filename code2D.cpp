@@ -168,6 +168,7 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 
 
 std::string bc2D::decode_image_barcode(const cv::Mat &matImage, vector<int> vecBarcodeTypes, int numwiggles){
+	//This is only used for QR codes atm if i am not mistaken
 	string bcString="";
 	Mat matImageK_orig;
 	if(matImage.channels() == 3){
