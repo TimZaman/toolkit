@@ -34,11 +34,11 @@ bool util::detectClipping(cv::Mat matImage, int threshold_min, double percent_al
 	//cout << " values > " << threshold_max << " = " << percent_max << "\%" << endl;
 
 	if (percent_min > percent_allowed_min){
-		strError = "Underexposure detected: " + to_string(percent_min) + "\% of values are below or equal to " + to_string(threshold_min) + "\n";
+		strError = "Underexposure detected: " + std::to_string(percent_min) + "\% of values are below or equal to " + std::to_string(threshold_min) + "\n";
 		return false;
 	}
 	if (percent_max > percent_allowed_max){
-		strError = "Overexposure detected: " + to_string(percent_max) + "\% of values are above or equal to " + to_string(threshold_max) + "\n";
+		strError = "Overexposure detected: " + std::to_string(percent_max) + "\% of values are above or equal to " + std::to_string(threshold_max) + "\n";
 		return false;
 	}
 	return true;
