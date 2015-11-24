@@ -4,6 +4,48 @@
 
 
 
+bool util::detectClipping(cv::Mat matImage, int threshold_min, double percent_allowed_min, int threshold_max, double percent_allowed_max, std::string &strError){
+	//cout << "detectClipping()" << endl;
+
+	cv::Mat matGray;
+	cvtColor(matImage, matGray, cv::COLOR_BGR2GRAY);
+	if (matGray.depth()==CV_16U){
+		//Convert to 8-bit
+		matGray.convertTo(matGray, CV_8U, 1.0/257.0);
+	}
+
+	int numMin=0;
+	int numMax=0;
+	int numTotal = matGray.rows*matGray.cols;
+	for (int i=0; i<numTotal; i++){
+		int val = (int)matGray.at<unsigned char>(i);
+		if (val <= threshold_min){
+			numMin++;
+		}
+		if (val >= threshold_max){
+			numMax++;
+		}
+	}
+
+	double percent_min = 100*double(numMin)/double(numTotal);
+	double percent_max = 100*double(numMax)/double(numTotal);
+
+	//cout << " values < " << threshold_min << " = " << percent_min << "\%" << endl;
+	//cout << " values > " << threshold_max << " = " << percent_max << "\%" << endl;
+
+	if (percent_min > percent_allowed_min){
+		strError = "Underexposure detected: " + to_string(percent_min) + "\% of values are below or equal to " + to_string(threshold_min) + "\n";
+		return false;
+	}
+	if (percent_max > percent_allowed_max){
+		strError = "Overexposure detected: " + to_string(percent_max) + "\% of values are above or equal to " + to_string(threshold_max) + "\n";
+		return false;
+	}
+	return true;
+}
+
+
+
 std::string util::matToJpgString(cv::Mat matImage){
 	//cout << "MatMeta::matToJpgString()" << endl;
 
@@ -22,12 +64,6 @@ std::string util::matToJpgString(cv::Mat matImage){
 	return str;
 }
 
-
-cv::Rect util::constrainRectInSize(cv::Rect rCrop, cv::Size sImage){
-	cv::Rect rImage(cv::Point(0,0), sImage);
-	cv::Rect rIntersection =  rCrop & rImage;
-	return rIntersection;
-}
 
 
 cv::RotatedRect util::scale(cv::RotatedRect rRect, double scale){
@@ -187,14 +223,14 @@ std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, 
 	//mindist [px] minimal distance to any other group member
 	std::vector<std::vector<int> > vecPtGroups;
 
-	std::cout << "vecPts.size()=" << vecPts.size() << std::endl;
+	//std::cout << "vecPts.size()=" << vecPts.size() << std::endl;
 
 	std::vector< std::vector<int> > vecCloseTo(vecPts.size());
-	//First make a list of stuff anything is close to withing the distance
+	//For each point, we make its own array that includes all the indices to the points that it's close to.
 	for (int i=0; i<vecPts.size();i++){
 		//vecCloseTo[i].push_back(i); //Itself
-		for (int j=i+1; j<vecPts.size();j++){
-		//for (int j=0; j<vecPts.size();j++){
+		//for (int j=i+1; j<vecPts.size();j++){
+		for (int j=0; j<vecPts.size();j++){
 			double dist = util::pointDist(vecPts[i], vecPts[j]);
 			if (dist<mindist){
 				vecCloseTo[i].push_back(j);
@@ -210,22 +246,26 @@ std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, 
 	//	std::cout << std::endl;
 	//}
 
+
+	//Now we chain-group all points
 	std::vector<int> alreadyInGroup;
 	for (int i=0; i<vecCloseTo.size();i++){	
 		for (int j=0; j<alreadyInGroup.size();j++){
 			if (i==alreadyInGroup[j]) continue;
 		}
 
-		//std::cout << std::endl << " = New Group = " << std::endl;
+		//std::cout << std::endl << " = New Group Candidate = " << std::endl;
 		//Now we have to use an self-recursive 'Escher' statement to follow the rabbit down the hole
 		std::vector<int> group;
 		addRecursive(group, i, vecCloseTo, alreadyInGroup);
 
-		//std::cout << "Group now:" << std::endl;
-		//for (int j=0; j<group.size(); j++){
-		//	std::cout << group[j] << " ";
-		//}
-		//std::cout << std::endl;
+		/*
+		std::cout << "Group now:" << std::endl;
+		for (int j=0; j<group.size(); j++){
+			std::cout << group[j] << " ";
+		}
+		std::cout << std::endl;
+		*/
 
 
 		if (group.size() > mingroupsize){
@@ -233,15 +273,20 @@ std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, 
 			std::sort( group.begin(), group.end());
 			group.erase( unique( group.begin(), group.end() ), group.end() );
 			vecPtGroups.push_back(group);
+			
+			//std::cout << "Group #" << int(vecPtGroups.size()-1) << std::endl;
+			//for (int j=0; j<group.size(); j++){
+			//	std::cout << group[j] << " ";
+			//}
+			//std::cout << std::endl;
 		}
 	}
 
-	std::cout << "vecPtGroups.size()=" << vecPtGroups.size() << std::endl;
-	for (int i=0; i<vecPtGroups.size(); i++){
-		std::cout << "vecPtGroups[" << i << "].size()=" << vecPtGroups[i].size() << std::endl;	
-	}
-
-	std::cout << "END groupPoints()" << std::endl;
+	//std::cout << "vecPtGroups.size()=" << vecPtGroups.size() << std::endl;
+	//for (int i=0; i<vecPtGroups.size(); i++){
+	//	std::cout << "vecPtGroups[" << i << "].size()=" << vecPtGroups[i].size() << std::endl;	
+	//}
+	//std::cout << "END groupPoints()" << std::endl;
 	return vecPtGroups;
 }
 
@@ -288,6 +333,14 @@ double util::pts2angleDeg(cv::Point pt1, cv::Point pt2){
 cv::RotatedRect util::fixRotatedRect(cv::RotatedRect rRect){
 	//Fixes a large angular rotation to a flip in width
 	cv::RotatedRect rRectNow = rRect;
+
+	//Get it as close to zero as possible
+	if (rRectNow.angle < -90.) {
+		rRectNow.angle += 180.0;
+	} else  if (rRectNow.angle > 90.) {
+		rRectNow.angle -= 180.0;
+	}
+
 	if (rRectNow.angle < -45.) {
 		rRectNow.angle += 90.0;
 		std::swap(rRectNow.size.width, rRectNow.size.height);
@@ -298,49 +351,90 @@ cv::RotatedRect util::fixRotatedRect(cv::RotatedRect rRect){
 	return rRectNow;
 }
 
-//OpenCV related
+
+void util::expand(cv::Rect & rBounding, double pixels){
+	//Expands a rectangle
+	double hpx = pixels*0.5;
+	rBounding = rBounding + cv::Size(pixels,pixels);
+	rBounding = rBounding - cv::Point(hpx,hpx);
+}
+
+
+cv::Rect util::constrainRectInSize(cv::Rect rRect, cv::Size sImage){
+	cv::Rect rImage(cv::Point(0,0), sImage);
+	cv::Rect rIntersection =  rRect & rImage;
+	return rIntersection;
+}
+
+
 cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 
+//	util::rectangle(matImage, rRect, cv::Scalar(255,0,0), 2);
+//	circle(matImage, rRect.center, 1, cv::Scalar(255,0,0));
+
 	cv::RotatedRect rRectNow = fixRotatedRect(rRect);
+
+//	util::rectangle(matImage, rRect, cv::Scalar(0,0,255), 1);
+
+//	imwrite("/Users/tzaman/Desktop/matImage.jpg", matImage);
 
 	//It's a rotatedrect, so first get the bounding box
 
 	cv::Rect rBounding = rRectNow.boundingRect();
 
+	//Now fix the bounding rectangle
+	if (rRectNow.size.width > rBounding.width){
+		std::cout << "width of crop wider than width of bb" << std::endl;
+		double d =rRectNow.size.width - rBounding.width; //Check out the difference
+		expand(rBounding, d);
+	}
+
+	if (rRectNow.size.height > rBounding.height){
+		std::cout << "height of crop wider than width of bb" << std::endl;
+		double d =rRectNow.size.height - rBounding.height; //Check out the difference
+		expand(rBounding, d);
+	}
+
+	std::cout << rBounding.tl() << std::endl;
+	std::cout << rBounding.br() << std::endl;
+
 	//Constrain it
-	rBounding = constrainRectInSize(rBounding, matImage.size());
+	cv::Rect rBoundingInside = constrainRectInSize(rBounding, matImage.size());
 
 	//Crop this off, and clone (because we rotate later)
+	cv::Mat matBound = matImage(rBoundingInside).clone();
+//	imwrite("/Users/tzaman/Desktop/matBound.jpg", matBound);
 
-	cv::Mat matBound = matImage(rBounding).clone();
+	//Not pad it if needed
+	int pad_top   = rBounding.tl().y < 0 ? -rBounding.tl().y : 0;
+	int pad_left  = rBounding.tl().x < 0 ? -rBounding.tl().x : 0;
+	int pad_right = rBounding.br().y >= matImage.rows ? rBounding.br().y-matImage.rows-1 : 0;
+	int pad_bot   = rBounding.br().x >= matImage.cols ? rBounding.br().x-matImage.rows-1 : 0;
+
+	//std::cout << pad_top << " " << pad_left << " " << pad_right << " " << pad_bot << std::endl;
+
+	if (pad_top > 0 || pad_left > 0 || pad_right > 0 || pad_bot > 0 ){
+		copyMakeBorder(matBound, matBound, pad_top, pad_bot, pad_left, pad_right, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
+//		imwrite("/Users/tzaman/Desktop/matBoundBorder.jpg", matBound);
+	}
 
 	//Now move the rotatedrect back by the part we have cropped off due to the bounding rect
 	rRectNow.center = rRectNow.center - cv::Point2f(rBounding.x, rBounding.y); //add +0.5? or -0.5? or?
 
-	float angle = rRectNow.angle;
+	//float angle = rRectNow.angle;
 
 	//Rotate around center
-	rotate(matBound, angle, matBound);
-	//imwrite("matBoundRot.png", matBound);
-
-	cv::Size rect_size = rRectNow.size;
-	
-	//Account for rotation
-	if (rRectNow.angle < -45.) {
-		angle += 90.0;
-		std::swap(rect_size.width, rect_size.height);
-	} else  if (rRectNow.angle > 45.) {
-		angle -= 90.0;
-		std::swap(rect_size.width, rect_size.height);
-	}
+	rotate(matBound, rRectNow.angle, matBound);
+//	imwrite("/Users/tzaman/Desktop/matBoundRot.jpg", matBound);
 
 
 	//Now we can crop, outward from the middle, with the size of the rotatedrect
 	cv::Mat matCrop;
-	getRectSubPix(matBound, rect_size, rRectNow.center, matCrop);
+	getRectSubPix(matBound, rRectNow.size, rRectNow.center, matCrop);
+
+//	imwrite("/Users/tzaman/Desktop/matCrop.jpg", matCrop);
 
 	return matCrop;
-
 }
 
 

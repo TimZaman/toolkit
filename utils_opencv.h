@@ -47,6 +47,8 @@
 namespace util{
 	//OpenCV related
 
+	bool detectClipping(cv::Mat, int, double, int, double, std::string &);
+	void expand(cv::Rect & , double );
 	std::string matToJpgString(cv::Mat);
 	cv::Rect constrainRectInSize(cv::Rect rCrop, cv::Size sImage);
 	cv::RotatedRect scale(cv::RotatedRect, double);
