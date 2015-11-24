@@ -4,6 +4,48 @@
 
 
 
+bool util::detectClipping(cv::Mat matImage, int threshold_min, double percent_allowed_min, int threshold_max, double percent_allowed_max, std::string &strError){
+	//cout << "detectClipping()" << endl;
+
+	cv::Mat matGray;
+	cvtColor(matImage, matGray, cv::COLOR_BGR2GRAY);
+	if (matGray.depth()==CV_16U){
+		//Convert to 8-bit
+		matGray.convertTo(matGray, CV_8U, 1.0/257.0);
+	}
+
+	int numMin=0;
+	int numMax=0;
+	int numTotal = matGray.rows*matGray.cols;
+	for (int i=0; i<numTotal; i++){
+		int val = (int)matGray.at<unsigned char>(i);
+		if (val <= threshold_min){
+			numMin++;
+		}
+		if (val >= threshold_max){
+			numMax++;
+		}
+	}
+
+	double percent_min = 100*double(numMin)/double(numTotal);
+	double percent_max = 100*double(numMax)/double(numTotal);
+
+	//cout << " values < " << threshold_min << " = " << percent_min << "\%" << endl;
+	//cout << " values > " << threshold_max << " = " << percent_max << "\%" << endl;
+
+	if (percent_min > percent_allowed_min){
+		strError = "Underexposure detected: " + to_string(percent_min) + "\% of values are below or equal to " + to_string(threshold_min) + "\n";
+		return false;
+	}
+	if (percent_max > percent_allowed_max){
+		strError = "Overexposure detected: " + to_string(percent_max) + "\% of values are above or equal to " + to_string(threshold_max) + "\n";
+		return false;
+	}
+	return true;
+}
+
+
+
 std::string util::matToJpgString(cv::Mat matImage){
 	//cout << "MatMeta::matToJpgString()" << endl;
 
