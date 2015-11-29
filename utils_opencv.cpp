@@ -183,37 +183,55 @@ std::vector<cv::Point> util::vecrotrect2vecpt(std::vector<cv::RotatedRect> vecRo
 	return vecPts;
 }
 
-
+static int depth = 0;
 void util::addRecursive(std::vector<int> & group, int myid, std::vector< std::vector<int> > & vecCloseTo, std::vector<int> & alreadyInGroup){
-	//std::cout << "addRecursive(" << myid << "..)" << std::endl;
+	std::cout << "addRecursive(" << myid << "..) depth=" << depth << std::endl;
 	//'myid' is the current index we are iterating through
+
 
 	//Skip if i was already in group
 	for (int i=0; i<alreadyInGroup.size(); i++){
 		if (myid==alreadyInGroup[i]) {
+			std::cout << " (already in group)" << std::endl;
 			return;
 		}
 	}
+	depth++;
+
 	alreadyInGroup.push_back(myid); //Add myself to group
 
-	//std::cout << myid << " will add [";
-	//for (int i=0; i < vecCloseTo[myid].size(); i++){
-	//	std::cout << vecCloseTo[myid][i] <<" ";
-	//}
-	//std::cout << "]" << std::endl;
+	std::cout << myid << " will add [";
+	for (int i=0; i < vecCloseTo[myid].size(); i++){
+		std::cout << vecCloseTo[myid][i] <<" ";
+	}
+	std::cout << "]" << std::endl;
 
 
 	for (int i=0; i < vecCloseTo[myid].size(); i++){
 		int depnow = vecCloseTo[myid][i];
-		for (int i=0; i<alreadyInGroup.size(); i++){
-			if (depnow==alreadyInGroup[i]) {
+		for (int j=0; j<alreadyInGroup.size(); j++){
+			if (depnow==alreadyInGroup[j] ) {
 				continue;
 			}
 		}
 		group.push_back(depnow);
 		addRecursive(group, depnow, vecCloseTo, alreadyInGroup);
 	}
+	depth--;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -228,9 +246,10 @@ std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, 
 	std::vector< std::vector<int> > vecCloseTo(vecPts.size());
 	//For each point, we make its own array that includes all the indices to the points that it's close to.
 	for (int i=0; i<vecPts.size();i++){
-		//vecCloseTo[i].push_back(i); //Itself
+		vecCloseTo[i].push_back(i); //Itself
 		//for (int j=i+1; j<vecPts.size();j++){
 		for (int j=0; j<vecPts.size();j++){
+			if (i==j) continue;
 			double dist = util::pointDist(vecPts[i], vecPts[j]);
 			if (dist<mindist){
 				vecCloseTo[i].push_back(j);
@@ -246,47 +265,55 @@ std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, 
 	//	std::cout << std::endl;
 	//}
 
+	std::vector<bool> isGrouped(vecCloseTo.size(), 0);
 
-	//Now we chain-group all points
-	std::vector<int> alreadyInGroup;
-	for (int i=0; i<vecCloseTo.size();i++){	
-		for (int j=0; j<alreadyInGroup.size();j++){
-			if (i==alreadyInGroup[j]) continue;
+	//NEW!
+	for (int i=0; i<vecCloseTo.size();i++){
+		//std::cout << "#G" << i << " : ";
+
+		if (isGrouped[i]) continue;
+
+		//Copy the current array to the newly formed group
+		std::vector<int> vecGroup(vecCloseTo[i]);
+
+		//Make the initial dynamic expanding group
+		for (int j=0; j<vecGroup.size(); j++){ //Vector size of vecGroup will get reevaluated each iteration
+			//Evaluate current dependency's depencencies and add those to the end of the group, only if it's not a previous dependency.
+			int depnow = vecGroup[j];
+			//std::cout << "d(" << depnow << ")[";
+
+			//If we havent used this dependencies' dependencies already, add those
+			//Append current deps' dependencies.
+			for (int k=0; k<vecCloseTo[depnow].size(); k++){ //Walk the deps
+				//Check if it's already present
+				int subdep = vecCloseTo[depnow][k];
+				if ( std::find(vecGroup.begin(), vecGroup.end(), subdep) != vecGroup.end() ){
+					//It's already in the group
+				} else {
+					//Not in group yet! add it.	
+					vecGroup.push_back(subdep);	
+					//std::cout << subdep << " ";
+				}
+			}
+			///std::cout << "] ";
 		}
 
-		//std::cout << std::endl << " = New Group Candidate = " << std::endl;
-		//Now we have to use an self-recursive 'Escher' statement to follow the rabbit down the hole
-		std::vector<int> group;
-		addRecursive(group, i, vecCloseTo, alreadyInGroup);
-
-		/*
-		std::cout << "Group now:" << std::endl;
-		for (int j=0; j<group.size(); j++){
-			std::cout << group[j] << " ";
+		for (int j=0;j<vecGroup.size();j++){
+			isGrouped[vecGroup[j]] = true;
 		}
-		std::cout << std::endl;
-		*/
 
-
-		if (group.size() > mingroupsize){
-			//Remove duplicates
-			std::sort( group.begin(), group.end());
-			group.erase( unique( group.begin(), group.end() ), group.end() );
-			vecPtGroups.push_back(group);
-			
-			//std::cout << "Group #" << int(vecPtGroups.size()-1) << std::endl;
-			//for (int j=0; j<group.size(); j++){
-			//	std::cout << group[j] << " ";
-			//}
-			//std::cout << std::endl;
-		}
+		vecPtGroups.push_back(vecGroup);
+		//std::cout << std::endl;
 	}
 
-	//std::cout << "vecPtGroups.size()=" << vecPtGroups.size() << std::endl;
-	//for (int i=0; i<vecPtGroups.size(); i++){
-	//	std::cout << "vecPtGroups[" << i << "].size()=" << vecPtGroups[i].size() << std::endl;	
+	//for (int i=0; i<vecPtGroups.size();i++){
+	//	std::cout << "#GROUP " << i << " : ";
+	//	for (int j=0; j<vecPtGroups[i].size(); j++){
+	//		std::cout << vecPtGroups[i][j] << " ";
+	//	}
+	//	std::cout << std::endl;
 	//}
-	//std::cout << "END groupPoints()" << std::endl;
+
 	return vecPtGroups;
 }
 
