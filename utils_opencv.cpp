@@ -183,56 +183,6 @@ std::vector<cv::Point> util::vecrotrect2vecpt(std::vector<cv::RotatedRect> vecRo
 	return vecPts;
 }
 
-static int depth = 0;
-void util::addRecursive(std::vector<int> & group, int myid, std::vector< std::vector<int> > & vecCloseTo, std::vector<int> & alreadyInGroup){
-	std::cout << "addRecursive(" << myid << "..) depth=" << depth << std::endl;
-	//'myid' is the current index we are iterating through
-
-
-	//Skip if i was already in group
-	for (int i=0; i<alreadyInGroup.size(); i++){
-		if (myid==alreadyInGroup[i]) {
-			std::cout << " (already in group)" << std::endl;
-			return;
-		}
-	}
-	depth++;
-
-	alreadyInGroup.push_back(myid); //Add myself to group
-
-	std::cout << myid << " will add [";
-	for (int i=0; i < vecCloseTo[myid].size(); i++){
-		std::cout << vecCloseTo[myid][i] <<" ";
-	}
-	std::cout << "]" << std::endl;
-
-
-	for (int i=0; i < vecCloseTo[myid].size(); i++){
-		int depnow = vecCloseTo[myid][i];
-		for (int j=0; j<alreadyInGroup.size(); j++){
-			if (depnow==alreadyInGroup[j] ) {
-				continue;
-			}
-		}
-		group.push_back(depnow);
-		addRecursive(group, depnow, vecCloseTo, alreadyInGroup);
-	}
-	depth--;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 std::vector<std::vector<int> > util::groupPoints(std::vector<cv::Point> vecPts, double mindist, int mingroupsize){
