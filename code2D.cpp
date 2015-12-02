@@ -649,7 +649,7 @@ std::string bc2D::readQR(cv::Mat matImage, double dpi){
 	return "";
 }
 
-std::string bc2D::readDMTX(cv::Mat matImage, double dpi){
+std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_inch_min, double barcode_width_inch_max){
 	cout << "readDMTX()" << endl;
 
 	//Mat matImage = imread("/Users/tzaman/Desktop/bc.tif");
@@ -664,17 +664,18 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi){
 	//Mat matImage = imread("/Users/tzaman/Desktop/20150505_Oslo_Run/20150505_153639_CAM0.tiff");
 	//Mat matImage = imread("/Users/tzaman/Desktop/20150505_Oslo_Run/20150505_153705_CAM0.tiff");
 	Mat matImageK; //grayscale image
+	Mat matImageKblur;
 	Mat matImageC; //contour image
 
 	cvtColor(matImage, matImageK, CV_BGR2GRAY);  //Convert RGB to BGR
 
 	cout << "blur_start" << endl;
 	//Blur it to supress noise and shit
-	cv::GaussianBlur(matImageK, matImageK, cv::Size(0, 0), 1.0);
+	cv::GaussianBlur(matImageK, matImageKblur, cv::Size(0, 0), 1.0);
 	cout << "blur_end" << endl;
 
 
-	threshold(matImageK, matImageC, 70, 255,THRESH_BINARY);
+	threshold(matImageKblur, matImageC, 70, 255,THRESH_BINARY);
 
 
 	vector< vector<Point> > contours; // Vector for storing contour
@@ -692,13 +693,12 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi){
 	
 	double squareness_threshold = 0.1; //f.e. 0.1=10% deviation aspect ratio width/height
 	
-	//double barcode_width_inch = 0.48; //DMTX oslo 0.48inch dmtx  (1dim)
 	double barcode_width_inch = 0.6; //DMTX oslo 0.48inch dmtx  (1dim)
-	double bc_sizedef_threshold = 0.3; //f.e. 0.1=10% deviation to probable barcode size (1dim)
+	//double bc_sizedef_threshold = 0.3; //f.e. 0.1=10% deviation to probable barcode size (1dim)
 
 	double bc_margin_extra_inch = 0.05; //add margin to final crop (in inches)
 
-	double hist_thres = 0.6; //f.e. 0.75=75% histgram comparison (with band-stop histogram filter)
+	double hist_thres = 0.65; //f.e. 0.75=75% histgram comparison (with band-stop histogram filter)
 
 	//Histogram correspondance params
 	int histSize = 16; //from 0 to 255
@@ -709,7 +709,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi){
 	double idealhist[16]={1.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0};
 
 	//Caculate barcode dimention from inches and dpi
-	double barcode_width_px = dpi*barcode_width_inch;
+	//double barcode_width_px = dpi*barcode_width_inch;
 
 	//Calculate size to add to rect in pixels
 	Point bc_ptadd(bc_margin_extra_inch*dpi*0.5, bc_margin_extra_inch*dpi*0.5);
@@ -721,8 +721,8 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi){
 	double ar_th_high = 1.0 + squareness_threshold;
 
 	//Barcode size thresholds
-	double bc_th_low  = barcode_width_px * (1-bc_sizedef_threshold);
-	double bc_th_high = barcode_width_px * (1+bc_sizedef_threshold);
+	double bc_th_low  = dpi*barcode_width_inch_min; //barcode_width_px * (1-bc_sizedef_threshold);
+	double bc_th_high = dpi*barcode_width_inch_max; //barcode_width_px * (1+bc_sizedef_threshold);
 
 	for( int i = 0; i< contours.size(); i++ ) {// iterate through each contour. 
 		//double a=contourArea( contours[i],false);  //  Find the area of contour
@@ -778,7 +778,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi){
 
 		util::autoClipBrighten(matHist, 0.05, 0.95);
 
-
+		//imwrite(boost::lexical_cast<string>(i)+"_dmtx_rect_hist.png", matHist);
 
 
 		//Check if histogram is any good, should have two distinct peaks.
@@ -789,8 +789,9 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi){
 		double histarea=0;
 		for (int i=0;i<16;i++){
 			histarea += hist32.at<float>(i);
+			//cout << hist32.at<float>(i) << " ";
 		}
-		//cout << "histarea=" << histarea << endl;
+		//cout << endl << "histarea=" << histarea << endl;
 
 		//Account for the histogram area, set cum to 1.
 		for (int i=0;i<16;i++){
