@@ -608,12 +608,12 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){
 				imwrite("/Users/tzaman/Desktop/bc/bc1D_t" + std::to_string(thresholds[j]) + "m.tif", matBarcode1Dmaxthres);
 			}
 
-			codeNow = decode_c39_tzaman(matBarcode1Dthres, scale_barcode_for_readout, width_mean);
+			codeNow = decode_stripes_zxing(matBarcode1Dthres);
 
 			if (codeNow.str.empty()){
 				//My own function did not work, try zxing's
-				codeNow = decode_stripes_zxing(matBarcode1Dthres);
-				
+				codeNow = decode_c39_tzaman(matBarcode1Dthres, scale_barcode_for_readout, width_mean);
+
 				if (!codeNow.str.empty()){
 					break;
 				}
