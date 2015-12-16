@@ -83,7 +83,12 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 	} //else: good place already, leave it.
 
 
-	//imwrite("matBitsRot.png",matBits);
+	if (0){
+		imwrite("/Users/tzaman/Desktop/bc/matBitsRot.png",matBits);
+		cout << "plz press key" << endl;
+		char a;
+		cin >> a;
+	}
 
 
 
@@ -115,47 +120,64 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 		 1,1,1,1,1,1,1,1,1,1};*/
 
 
-
-	Ref<BitMatrix> bits(new BitMatrix(width));
-
-	for (int w=0; w<width; w++){
-		for (int h=0; h<height; h++){
-			//if (vals[i]){
-			//cout << "[" << w << "," << h << "] ";
-			if (matBits.at<uchar>(w, h)<100){
-			//if (vals[w*width+h]){
-				bits->set(h,w); //toggle black=1
-				//cout << " : 1";
-			}
-			//cout << endl;
-			
+	vector<int> thresholds;
+	thresholds.push_back(100); //Attempt a fixed threshold for value 100 [0:255]
+	//Find a dynamic threshold for badly printed targets.
+	//The strategy used here is finding a threshold so that the entire
+	//'connected edge' (bottom left) is filled (black). So find the minimum black
+	//value therein
+	int minVal = 255;
+	for (int x=0;x<matBits.cols;x++){
+		int valNow = matBits.at<uchar>(x,matBits.rows-1);
+		if (valNow < minVal){
+			minVal = valNow;
 		}
 	}
+	for (int y=0; y<matBits.rows; y++){
+		int valNow = matBits.at<uchar>(0,y);
+		if (valNow < minVal){
+			minVal = valNow;
+		}
+	}
+	//cout << "minVal=" << minVal << endl;
+	//Now finally add a few points for a little margin.
+	minVal = minVal + 5;
+	thresholds.push_back(minVal);
 
+	for (int i=0; i<thresholds.size(); i++){
+		Ref<BitMatrix> bits(new BitMatrix(width));
+		for (int w=0; w<width; w++){
+			for (int h=0; h<height; h++){
+				if (matBits.at<uchar>(w, h) < thresholds[i]){
+					bits->set(h,w); //toggle black=1
+				}
+			}
+		}
 
-	try{
-		datamatrix::Decoder decoder_;
-		Ref<DecoderResult> decoderResult(decoder_.decode(bits));
+		try{
+			datamatrix::Decoder decoder_;
+			Ref<DecoderResult> decoderResult(decoder_.decode(bits));
 
-		bcString = decoderResult->getText()->getText();
+			bcString = decoderResult->getText()->getText();
 
-		cout << "Found barcode:" << bcString << endl;
-		//cout << decoderResult->getRawBytes() << endl;
+			cout << "Found barcode:" << bcString << endl;
+			//cout << decoderResult->getRawBytes() << endl;
 
-	}catch (const zxing::ChecksumException& e) {  
-        cout << "zxing::ChecksumException: " + string(e.what())  << endl; 
-	} catch (const zxing::ReaderException& e) {  
-        cout << "zxing::ReaderException: " + string(e.what())  << endl;
-    } catch (const zxing::IllegalArgumentException& e) {  
-        cout << "zxing::IllegalArgumentException: " + string(e.what())  << endl;
-    } catch (const zxing::Exception& e) {  
-        cout << "zxing::Exception: " + string(e.what())  << endl;
-    } catch (const std::exception& e) {  
-        cout << "std::exception: " + string(e.what())  << endl;
-    } catch (...) { //GOTTA CATCH EM ALL *POKEMON*
-    	//POKEMON!
-    	cout << "Pokemon ZXING Catch!" << endl;
-    }
+		}catch (const zxing::ChecksumException& e) {  
+	        cout << "zxing::ChecksumException: " + string(e.what())  << endl; 
+		} catch (const zxing::ReaderException& e) {  
+	        cout << "zxing::ReaderException: " + string(e.what())  << endl;
+	    } catch (const zxing::IllegalArgumentException& e) {  
+	        cout << "zxing::IllegalArgumentException: " + string(e.what())  << endl;
+	    } catch (const zxing::Exception& e) {  
+	        cout << "zxing::Exception: " + string(e.what())  << endl;
+	    } catch (const std::exception& e) {  
+	        cout << "std::exception: " + string(e.what())  << endl;
+	    } catch (...) { //GOTTA CATCH EM ALL *POKEMON*
+	    	//POKEMON!
+	    	cout << "Pokemon ZXING Catch!" << endl;
+	    }
+	}
 
 	cout << " decode_pure_barcode END" << endl;
 	return bcString;
@@ -190,6 +212,7 @@ std::string bc2D::decode_image_barcode(const cv::Mat &matImage, vector<int> vecB
 			int bordersz = matImageK.cols*0.1;
 			int bordersz_h = floor(bordersz*0.5);
 			Rect r(Point(bordersz_h, bordersz_h), Point(matImageK.cols-bordersz, matImageK.rows-bordersz)); //Crop off 7 pixels on all sides
+			r = util::constrainRectInSize(r, matImageK.size());
 			matImageK = matImageK(r);
 
 		} else if (w==2){
@@ -649,8 +672,14 @@ std::string bc2D::readQR(cv::Mat matImage, double dpi){
 	return "";
 }
 
-std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_inch_min, double barcode_width_inch_max){
+
+
+
+
+std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_inch_min, double barcode_width_inch_max, int bin_thres){
 	cout << "readDMTX()" << endl;
+
+	bool debugbarcode = false; //FOR PRODUCTION PUT TO FALSE
 
 	//Mat matImage = imread("/Users/tzaman/Desktop/bc.tif");
 	//Mat matImage = imread("/Users/tzaman/Desktop/qr.tif");
@@ -669,28 +698,26 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 
 	cvtColor(matImage, matImageK, CV_BGR2GRAY);  //Convert RGB to BGR
 
-	cout << "blur_start" << endl;
+	//cout << "blur_start" << endl;
 	//Blur it to supress noise and shit
 	cv::GaussianBlur(matImageK, matImageKblur, cv::Size(0, 0), 1.0);
-	cout << "blur_end" << endl;
+	//cout << "blur_end" << endl;
 
 
-	threshold(matImageKblur, matImageC, 70, 255,THRESH_BINARY);
-
+	threshold(matImageKblur, matImageC, bin_thres, 255,THRESH_BINARY);
 
 	vector< vector<Point> > contours; // Vector for storing contour
 	vector<Vec4i> hierarchy;
 	findContours( matImageC, contours, hierarchy,CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE ); // Find the contours in the image
-	
-	
-	//cout << "contours#=" << contours.size() << endl;
-	//namedWindow( "rectangles" );
-	//imshow("rectangles", matImage);
-	//waitKey(0);
 
-	//Parameters
-	//double dpi = 300;
-	
+	if (debugbarcode){
+		imwrite("/Users/tzaman/Desktop/bc/_matImageC.tif", matImageC);
+		//cout << "PREZZEZ KEY" << endl;
+		//char a;
+		//cin >> a;
+	}
+
+
 	double squareness_threshold = 0.1; //f.e. 0.1=10% deviation aspect ratio width/height
 	
 	double barcode_width_inch = 0.6; //DMTX oslo 0.48inch dmtx  (1dim)
@@ -698,7 +725,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 
 	double bc_margin_extra_inch = 0.05; //add margin to final crop (in inches)
 
-	double hist_thres = 0.65; //f.e. 0.75=75% histgram comparison (with band-stop histogram filter)
+	double hist_thres = 0.60; //f.e. 0.75=75% histgram comparison (with band-stop histogram filter)
 
 	//Histogram correspondance params
 	int histSize = 16; //from 0 to 255
@@ -725,8 +752,12 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 	double bc_th_high = dpi*barcode_width_inch_max; //barcode_width_px * (1+bc_sizedef_threshold);
 
 	for( int i = 0; i< contours.size(); i++ ) {// iterate through each contour. 
-		//double a=contourArea( contours[i],false);  //  Find the area of contour
-		RotatedRect rRect = minAreaRect(contours[i]);
+		double a=contourArea( contours[i],false);  //  Find the area of contour
+		if (a<25){continue;}
+		//cout << i << endl;
+
+		
+		RotatedRect rRect = util::minAreaSquare(contours[i]);
 
 		//First check for squareness
 		int w = rRect.size.width;
@@ -736,49 +767,49 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 			continue;
 		}
 
-		int avg = (w+h)*0.5; //Average dimention of the square (w and h avg)
+		//Distinguish by size
+		int avg = (w+h)*0.5; //Average dimension of the square (w and h avg)
 		if (avg<bc_th_low || avg> bc_th_high){
 			continue;
 		}
 
 		//Put the barcodes as upright a we found them
-		double rotangle = rRect.angle;
-		if (rotangle<-45){
-			rotangle += 90;
-			rRect.size = Size2f(rRect.size.height, rRect.size.width); //Swap width and height
-		} else if (rotangle>45){
-			rotangle -= 90;
-			rRect.size = Size2f(rRect.size.height, rRect.size.width); //Swap width and height
-		}
+		rRect = util::fixRotatedRect(rRect);
 
+		double rotangle = rRect.angle;
 
 
 
 		Rect boundRect = rRect.boundingRect();
+		boundRect = util::constrainRectInSize(boundRect, matImageK.size());
 
-
-		if (0){
+		if (debugbarcode){
 			Mat image = matImage.clone();
-			Point2f vertices[4];
-			rRect.points(vertices);
-			for (int i = 0; i < 4; i++){
-				line(image, vertices[i], vertices[(i+1)%4], Scalar(0,255,0), 1);
-			}
+			util::rectangle(image, rRect, Scalar(0,255,0), 1);
+
+			//util::rectangle(image, rSquare, Scalar(0,0,255), 1);
+
+			/*for(int j=0;j<convex_hull.size();j++){
+				cout << " " << j << " " << convex_hull[j] << endl;
+				int j2 = j+1 == convex_hull.size() ? 0 : j+1; //Workaround to connect last to first
+				line(image, convex_hull[j], convex_hull[j2], Scalar(255,0,0), 1);
+			}*/
+
 			//rectangle(image, boundRect, Scalar(255,0,0), 1);
 			//drawContours( matImage, contours, 0, Scalar(255), CV_FILLED, 8, hierarchy ); // Draw the largest contour using previously stored index.
 			//imshow("rectangles", image);
-			imwrite(boost::lexical_cast<string>(i)+"_dmtx_rect.png", image(boundRect));
+			imwrite("/Users/tzaman/Desktop/bc/" + boost::lexical_cast<string>(i) + "_dmtx_rect.png", image(boundRect));
 		}
 
 
-		boundRect = util::constrainRectInSize(boundRect, matImageK.size());
+		
 
 		Mat matHist = matImageK(boundRect).clone();
  		
 
 		util::autoClipBrighten(matHist, 0.05, 0.95);
 
-		//imwrite(boost::lexical_cast<string>(i)+"_dmtx_rect_hist.png", matHist);
+		
 
 
 		//Check if histogram is any good, should have two distinct peaks.
@@ -809,10 +840,14 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 
 		//cout << "cumscore=" << cumscore << endl;
 
+		if (debugbarcode){
+			imwrite("/Users/tzaman/Desktop/bc/" + boost::lexical_cast<string>(i)+"_dmtx_rect_hist_c" + std::to_string((int)round(cumscore*100)) +".png", matHist);
+		}
+
 		//A cumscore value of 1 is the maximum that can be attained.
 		if (cumscore < hist_thres){
-			cout << "cumscore too low. rejecting candidate." << endl;
-			continue;
+			cout << "histogram cumscore too low (" << cumscore << " / " << hist_thres << "). rejecting candidate " << i <<"." << endl;
+			//continue;
 		}
 
 		//See if we can read it purely..
@@ -855,8 +890,8 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 		rMask = util::constrainRectInSize(rMask, matBarcode.size());
 		matBarcode = matBarcode(rMask); 
 
-		if(0){
-			imwrite(boost::lexical_cast<string>(i)+"_dmtx.png", matBarcode);
+		if (debugbarcode){
+			imwrite("/Users/tzaman/Desktop/bc/" + boost::lexical_cast<string>(i)+"_dmtx.png", matBarcode);
 		}
 
 		vector<int> codeType;
