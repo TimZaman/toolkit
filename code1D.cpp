@@ -258,7 +258,7 @@ stripeCode bc1D::decode_c39_tzaman(cv::Mat matBarcode1D, double scale_barcode_fo
 
 
 
-std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){
+std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //warning, 'dpi' variable is overwritten later (400dpi)
 	cout << "readStripeCode()" << endl;
 	std::vector<stripeCode> vecStripecodes;
 
@@ -273,7 +273,7 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){
 
 	// VARIABLES //
 	double bar_height_mm_min = 3.7; //[7.5mm=our NMNH c39] [10.7mm=NMNH cover c39]
-	double bar_height_mm_max = 15;
+	double bar_height_mm_max = 20;
 
 	double bar_ar_min = 4;
 	double bar_ar_max = 110;
@@ -638,6 +638,8 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){
 		codeNow.rotRect = rotRectBarcode;
 
 		vecStripecodes.push_back(codeNow);
+
+		//TODO: removed duplicate barcodes?
 
 
 		if (debugstripecode){
