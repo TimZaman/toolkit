@@ -803,3 +803,135 @@ cv::RotatedRect util::minAreaSquare( cv::InputArray _points ){
 }
 
 
+cv::Mat util::correctGamma(cv::Mat &img, cv::Vec3d gamma , double contrast , bool forSaving){
+	return correctGamma(img, gamma[2], gamma[1], gamma[0], contrast , forSaving);
+}
+
+cv::Mat util::correctGamma(cv::Mat &img, double gammaR,  double gammaG ,  double gammaB , double contrast , bool forSaving) {
+	//cout << "inside correctGamma.." << endl;
+	int depth;
+	int maxbit;
+
+	cv::Mat returnImg;
+
+	if (forSaving == true){ //Leave bit-depth as-is for saving
+		//cout << "image is for left as is.." << endl;
+		img.copyTo(returnImg);
+	} else {
+		if (img.depth() == CV_8U){
+			//cout << "image is for left as is (8bit).." << endl;
+			img.copyTo(returnImg);
+		} else if (img.depth() == CV_16U){
+			//cout << "image is converted to 8 bit.." << endl;
+			img.convertTo(returnImg, CV_8U, 1.0/257.0);
+		}
+	}
+
+
+	if ( returnImg.depth() == CV_8U){
+		//cout << "depth=CV_8U" << endl;
+		depth = CV_8U;
+		maxbit=255;
+	} else if ( returnImg.depth() == CV_16U) {
+		//cout << "depth=CV_16U" << endl;
+		depth = CV_16U;
+		maxbit = 65535;
+	} else {
+		std::cout << "WARNING! UNKNOWN BITDEPTH!" << std::endl;
+		return img;
+	}
+
+	int N_SEG = maxbit+1;
+	//cout << "N_SEG=" << N_SEG << endl;
+
+	//Compute the difference between the scales it should be contained within
+	//double dif = absMaxNow-absMinNow; //240-13=227
+
+
+
+	//cout << "Correcting gamma.." << endl;
+	//vector<Mat> imgSplit(returnImg.channels());
+	std::vector<cv::Mat> splitResult(returnImg.channels());
+
+	//cout << "splitting image.." << endl;
+	cv::split(returnImg, splitResult);
+
+	//double gammaArr[3] = {gammaR, gammaG, gammaB};
+	double gammaArr[3] = {gammaB, gammaG, gammaR}; //OpenCV BGR style
+	//Sanitize values  between [-1:1]
+	contrast = (contrast < -0.5)? -0.5 : contrast;
+	contrast = (contrast >  0.5)?  0.5 : contrast;
+
+	//cout << "Starting loop.." << endl;
+
+	//tic();
+	//#pragma omp parallel for
+	for (int c=0; c<returnImg.channels(); c++){
+
+		double gamma = gammaArr[c];
+
+		//Sanitize values  between [-1:1]
+		gamma = (gamma < -0.5)? -0.5 : gamma;
+		gamma = (gamma >  0.5)?  0.5 : gamma;
+
+
+		//cout << "gamma=" << gamma << " contrast=" << contrast << endl;
+		//imgSplit[c].copyTo(splitResult[c]);
+
+		//double gamma = 0.3;
+		//double contrast = 0.5;
+		//cout << "making bezier.." << endl;
+		//tic();
+
+		int lutX[N_SEG];
+		int lutY[N_SEG];	
+		//std::cout << "making bezier.." << std::endl;
+		util::makeBezier(gamma, contrast, N_SEG, lutX, lutY);
+		//toc();
+		//std::cout << "bezier done." << std::endl;
+
+		//for (int i=0;i<N_SEG;i=i+1){
+		//	cout << lutX[i] << "," << lutY[i] << endl;
+		//}
+
+		
+		//std::cout << "applying LUT.." << std::endl;
+		//tic();
+		/*
+		for(int x=0; x<returnImg.cols; x++){
+			for(int y=0; y<returnImg.rows; y++){
+				//8bit=Vec3b; 16bit=Vec3w
+				//if (depth==CV_16U){
+				//	returnImg.at<Vec3w>(y,x)[c] = lutY[ returnImg.at<Vec3w>(y,x)[c] ];
+				//} else {
+				//	returnImg.at<Vec3b>(y,x)[c] = lutY[ returnImg.at<Vec3b>(y,x)[c] 
+				//}
+			}
+		} 
+		*/
+		//toc();
+
+
+		int dim(256);
+		cv::Mat lut(1, &dim, CV_8U);
+		for (int i=0; i<256; i++){
+			//lut.at<uchar>(i)= 255-i;
+			lut.at<uchar>(i)= lutY[i];
+		}
+		cv::LUT(splitResult[c], lut, splitResult[c]);
+
+		//std::cout << "Done LUT application" << std::endl;
+	}
+	//toc();
+	
+	cv::merge(splitResult, returnImg);
+
+	//namedWindow("win", cv::WINDOW_NORMAL);  
+	//imshow("win", returnImg);
+	//waitKey(0);
+
+
+
+	return returnImg;
+}
+

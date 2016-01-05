@@ -43,6 +43,7 @@
 	#include <asl.h> //Apple System Logger API
 #endif
 
+#include "toolkit/utils_general.h"
 
 namespace util{
 	//OpenCV related
@@ -75,6 +76,8 @@ namespace util{
 	cv::Size getFitSize(cv::Size sizeIn, cv::Size sizeOut);
 	static void rotatingCalipers( const cv::Point2f* points, int n, float* out );
 	cv::RotatedRect minAreaSquare( cv::InputArray _points );
+	cv::Mat correctGamma(cv::Mat &img, cv::Vec3d gamma , double contrast , bool forSaving);
+	cv::Mat correctGamma(cv::Mat &img, double gammaR,  double gammaG ,  double gammaB , double contrast , bool forSaving);
 };
 
 
