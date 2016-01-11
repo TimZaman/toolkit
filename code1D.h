@@ -125,7 +125,7 @@ struct stripeCode {
 
 namespace bc1D {
 
-  stripeCode decode_c39_tzaman(cv::Mat, double, double);
+  stripeCode decode_c39_tzaman(cv::Mat);
   stripeCode decode_stripes_zxing(cv::Mat);
 
 	std::vector<stripeCode> readStripeCode(cv::Mat, double);

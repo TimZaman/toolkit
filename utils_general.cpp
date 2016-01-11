@@ -22,6 +22,18 @@ std::string util::urlencode(const std::string &s){
 	return e.str();
 }
 
+//TODO: use template for this
+double util::calcMean(std::vector<int> scores){ //calculates mean
+	if (scores.size()==0) {
+		std::cerr << "Warning! Empty vector in calcMedian!" << std::endl;
+		return 0;
+	}
+	double sum=0;
+	for (int i=0; i < scores.size(); i++){
+		sum += scores[i];
+	}
+	return sum/double(scores.size());
+}
 
 double util::calcMean(std::vector<double> scores){ //calculates mean
 	if (scores.size()==0) {
@@ -37,25 +49,54 @@ double util::calcMean(std::vector<double> scores){ //calculates mean
 
 
 double util::calcMedian(std::vector<double> scores){ //calculates median
-  double median=0;
+	double median=0;
 
-  size_t size = scores.size();
+	size_t size = scores.size();
 
-  if (scores.size()==0) {
-  	std::cerr << "Warning! Empty vector in calcMedian!" << std::endl;
-  	return 0;
-  }
-  
-  sort(scores.begin(), scores.end());
+	if (scores.size()==0) {
+		std::cerr << "Warning! Empty vector in calcMedian!" << std::endl;
+		return 0;
+	}
 
-  if (size  % 2 == 0){
-      median = (scores[size / 2 - 1] + scores[size / 2]) / 2;
-  } else {
-      median = scores[size / 2];
-  }
+	sort(scores.begin(), scores.end());
 
-  return median;
+	if (size  % 2 == 0){
+		median = (scores[size / 2 - 1] + scores[size / 2]) / 2;
+	} else {
+		median = scores[size / 2];
+	}
+
+	return median;
 }
+
+double util::calcMeanOfQuarterAndThreeQuarterPercentile(std::vector<double> scores){ 
+	//Best function name ever. Takes average of 1/4th and 3/4th percentile (median-style)
+	double result=0;
+
+	//assert(scores.size()<3);
+
+	size_t size = scores.size();
+
+	if (scores.size()==0) {
+		std::cerr << "Warning! Empty vector in calcMedian!" << std::endl;
+		return 0;
+	}
+
+	sort(scores.begin(), scores.end());
+
+	int index_quarter = floor(scores.size()*0.25);
+	int index_three_quarter = floor(scores.size()*0.75);
+
+	result = (scores[index_quarter]+scores[index_three_quarter])*0.5;
+
+	return result;
+}
+
+
+
+
+
+
 
 bool util::isValidURL(std::string strUrl){
 	try
