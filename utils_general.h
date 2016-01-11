@@ -66,8 +66,11 @@ namespace util{
 
 	// === FUNCTIONS === //
 	std::string urlencode(const std::string &s);
+
+	double calcMean(std::vector<int> scores);
 	double calcMean(std::vector<double> scores);
 	double calcMedian(std::vector<double> scores);
+	double calcMeanOfQuarterAndThreeQuarterPercentile(std::vector<double> scores);
 	bool isValidURL(std::string);
 
 	void logASL(std::string);

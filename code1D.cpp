@@ -118,44 +118,97 @@ stripeCode bc1D::decode_stripes_zxing(cv::Mat matImage){
 
 
 
-stripeCode bc1D::decode_c39_tzaman(cv::Mat matBarcode1D, double scale_barcode_for_readout, double width_mean){
+stripeCode bc1D::decode_c39_tzaman(cv::Mat matBarcode1D){
 	stripeCode codeNow;
 	//Walk the code and extract words
 
-	char prevbc=255; //white is start and base color
-	char curbc=0;
-	int lengthnow=0;
-	double width_min = scale_barcode_for_readout*width_mean/5.0; //Take a fair margin, things can get messy with thresholding
-	double width_max = scale_barcode_for_readout*width_mean*3.0;
+	vector<double> intervals_black;
+	vector<double> intervals_white;
+	//We will now perform smart measurement of the white and black stripes.
+	char prev_char=matBarcode1D.at<char>(0);
+	int current_length=0;
+	for (int i=1; i<matBarcode1D.rows * matBarcode1D.cols; i++){
+		char current_char=matBarcode1D.at<char>(i);
+		current_length++;
+		if (current_char!=prev_char){
+			//Switch
+			if (prev_char==0){
+				intervals_black.push_back(current_length);
+			} else {
+				intervals_white.push_back(current_length);
+			}
+			current_length=0; //reset
+		}
+		prev_char = current_char;
+	}
 
-	int width_wide_narrow_division = round(scale_barcode_for_readout*width_mean*1.2); //This is the actual division when something is wide or narrow
+	intervals_white.erase(intervals_white.begin()); //erase first white index (as the barcode itself starts with black, but background with white)
+
+	int width_wide_narrow_division_white = util::calcMeanOfQuarterAndThreeQuarterPercentile(intervals_white);
+	int width_wide_narrow_division_black = util::calcMeanOfQuarterAndThreeQuarterPercentile(intervals_black);
+	//Account for the fact that character spacing is thin and more thin divisors that wide
+	width_wide_narrow_division_white*=1.3;
+
+	//Account for the fact that at most 2/5 are black wide.
+	width_wide_narrow_division_black*=1.1;
+
+	double width_max = max(width_wide_narrow_division_white, width_wide_narrow_division_black) * 2.5;
+
+	/*
+	cout << "intervals_white=" << endl;
+	for (int i=0; i<intervals_white.size(); i++){
+		cout << intervals_white[i] << ",";
+	}
+	cout << endl;
+	cout << "intervals_black=" << endl;
+	for (int i=0; i<intervals_black.size(); i++){
+		cout << intervals_black[i] << ",";
+	}
+	cout << endl;
+	cout << "width_wide_narrow_division_white=" << width_wide_narrow_division_white << endl;
+	cout << "width_wide_narrow_division_black=" << width_wide_narrow_division_black << endl;
+	*/
+
 
 	vector<char> words;
-	for (int j=0; j<matBarcode1D.rows * matBarcode1D.cols; j++){
-		curbc = matBarcode1D.at<char>(j); //Current value (1/0)
+	char prevbc=255; //white is start and base color
+	int lengthnow=0;
+	for (int i=0; i<matBarcode1D.rows * matBarcode1D.cols; i++){
+		char curbc = matBarcode1D.at<char>(i); //Current value (1/0)
 		if (curbc!=prevbc){ //1/0 switch
-			if ((lengthnow > width_min) && (lengthnow < width_max)) {
-				words.push_back(lengthnow > width_wide_narrow_division ? 'w' : 'n');
+			//if ((lengthnow > width_min) && (lengthnow < width_max)) {
+			if ((lengthnow < width_max)) {
+				int division_width_threshold;
+				if (prevbc==0){
+					division_width_threshold = width_wide_narrow_division_black;
+				} else {
+					division_width_threshold = width_wide_narrow_division_white;
+				}
+				words.push_back(lengthnow > division_width_threshold ? 'w' : 'n');
+				
 			} else {
 				//cout << "word ignored. l=" << lengthnow << endl;
 				words.push_back('X');
 			}
+			//cout << lengthnow << " ";
 			lengthnow=0; //Reset length
 		}
 		prevbc = curbc;
 		lengthnow++;
 	} 
+	//cout << endl;
 
 	std::string bc_string(words.begin(), words.end());
 
 	//We now have a word array in which 'n'=narrow, 'w'=wide, 'X'=very wide/invalid
 
-
-	//cout << "Words(" << words.size() <<"):" << endl;
-	//for (int j=0; j<words.size(); j++){
-	//	cout << words[j];
-	//}
-	//cout << endl;
+	/*
+	cout << "Words(" << words.size() <<"):" << endl;
+	for (int j=0; j<words.size(); j++){
+		cout << words[j];
+	}
+	cout << endl;
+	*/
 
 
 	//Generate the decodingmapc
@@ -211,7 +264,7 @@ stripeCode bc1D::decode_c39_tzaman(cv::Mat matBarcode1D, double scale_barcode_fo
 		return codeNow;
 	}
 
-	//cout << "bc_start_idx=" << bc_start_idx << " bc_stop_idx=" << bc_stop_idx << endl;
+	cout << "bc_start_idx=" << bc_start_idx << " bc_stop_idx=" << bc_stop_idx << endl;
 
 	string strRaw = bc_string.substr(bc_start_idx, bc_stop_idx-bc_start_idx+9);
 
@@ -280,7 +333,7 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 
 	int min_characters = 5; //minimum characters in barcode string
 
-	double bar_dist_group_mm_max = 15; //Maximum distance between any grouped bar to be part of the bar group
+	double bar_dist_group_mm_max = 9.0; //Maximum distance between any grouped bar to be part of the bar group
 
 	// COMPUTE //
 	double bar_height_px_min = bar_height_mm_min/25.4*dpi;
@@ -326,7 +379,7 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 
 	//RANSAC vars
 	int min_inliers = (min_characters+2)*5*0.8; //+2 (start&stop), *5 (stripes per char), *0.8 (margin)
-	double max_px_dist = bar_height_px_max*0.1; //Height deviation for ransac
+	double max_px_dist = (bar_height_px_min+bar_height_px_max)*0.5*0.025; //Maximum distance from RANSAC line to a point
 
 	vector<RotatedRect> stripeCandidates;
 	for(int i = 0; i >= 0; i = hierarchy[i][0] ) {
@@ -516,8 +569,8 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 			//cout << vecVecInlierIdx[i][j] << endl;
 			//cout << "checking out stripecandidate[" << vecVecInlierIdx[i][j] << "] #" << vecVecInlierIdx[i][j] << endl;
 			stripesVerified[j] = stripeCandidates[vecVecInlierIdx[i][j]];
-			double dim_smallest = min(stripesVerified[j].size.width, stripesVerified[j].size.height);
-			double dim_tallest  = max(stripesVerified[j].size.width, stripesVerified[j].size.height);
+			double dim_smallest = min(stripesVerified[j].size.width, stripesVerified[j].size.height); //For rotation invariance
+			double dim_tallest  = max(stripesVerified[j].size.width, stripesVerified[j].size.height); //For rotation invariance
 			bar_heights[j] = dim_tallest;
 			bar_widths[j]  = dim_smallest;
 
@@ -596,7 +649,7 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 
 		//Test three different thresholds to account for different amounts of ink (little ink/a lot of ink/etc)
 		int thresholds[]={165, 150, 180, 120, 200, 215};//THIS LIST IS IN ORDER OF BEST PERFORMING TRESHOLDS!
-		
+		//int thresholds[]={150};
 		for (int j=0; j<6; j++){
 			//cout << "j=" << j << endl;
 			Mat matBarcode1Dthres, matBarcode1Dmaxthres;
@@ -607,29 +660,33 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 				imwrite("/Users/tzaman/Desktop/bc/bc1D_t" + std::to_string(thresholds[j]) + ".tif", matBarcode1Dthres);
 				imwrite("/Users/tzaman/Desktop/bc/bc1D_t" + std::to_string(thresholds[j]) + "m.tif", matBarcode1Dmaxthres);
 			}
-
+//cout << "1codeNow.str=" << codeNow.str << endl;
 			codeNow = decode_stripes_zxing(matBarcode1Dthres);
-
+//cout << "2codeNow.str=" << codeNow.str << endl;
 			if (codeNow.str.empty()){
 				//My own function did not work, try zxing's
-				codeNow = decode_c39_tzaman(matBarcode1Dthres, scale_barcode_for_readout, width_mean);
-
+				codeNow = decode_c39_tzaman(matBarcode1Dthres);
+//cout << "3codeNow.str=" << codeNow.str << endl;
 				if (!codeNow.str.empty()){
 					break;
 				}
 
 				//try zxing with only taking the max (for a shitty printer)
 				codeNow = decode_stripes_zxing(matBarcode1Dmaxthres);
+//cout << "4codeNow.str=" << codeNow.str << endl;
 				if (!codeNow.str.empty()){
 					break;
 				}	
+			} else {
+				break;
 			}
 		}
+//cout << "5codeNow.str=" << codeNow.str << endl;
 
 		if (codeNow.str.empty()){
 			continue; //No barcode here, next..
 		}
-
+//cout << "6codeNow.str=" << codeNow.str << endl;
 
 
 
@@ -654,7 +711,7 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 	}
 
 
-	cout << "END stripecodeTest()" << endl;
+	cout << "END bc1D::readStripeCode() - found #" << vecStripecodes.size() << " barcodes." << endl;
 	return vecStripecodes;
 }
 
@@ -749,8 +806,8 @@ void bc1D::cpRansac_barcode(std::vector<cv::Point> vecPtsIn, int min_inliers, do
 		pt2.x = round(line[2] + line[0]*t);
 		pt2.y = round(line[3] + line[1]*t);
 
-
-		if (0){//debugransac){
+		/*
+		if (debugransac){
 			//Shows the line that passes the angle constrant
 			cv::line(img_debug, pt1, pt2, Scalar(0,255,255), 10, CV_AA, 0 );
 			namedWindow("win", WINDOW_NORMAL);
@@ -759,7 +816,7 @@ void bc1D::cpRansac_barcode(std::vector<cv::Point> vecPtsIn, int min_inliers, do
 			imshow( "win", img_tmp );
 			waitKey(200);
 			//cout << line[0] << " "<< line[1] << " "<< line[2] << " "<< line[3] << endl;
-		}
+		}*/
 
 		//For every point not in maybe_inliers we iterate and add it to the set
 		for(int ii=0;ii<numpts;ii++){
