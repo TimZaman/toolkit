@@ -354,7 +354,7 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 		int AT_iseven=AT_blocksize%2;
 		AT_blocksize += 1+AT_iseven; //Makes sure the blocksize is an even number
 		//cout << "AT_blocksize=" << AT_blocksize << endl;
-		adaptiveThreshold(matImageK, matThres, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, AT_blocksize, 15);
+		adaptiveThreshold(matImageK, matThres, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, AT_blocksize, 20);
 	} else {
 		threshold(matImageK, matThres, 127, 255, THRESH_BINARY_INV);
 	}
@@ -378,8 +378,8 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 	}
 
 	//RANSAC vars
-	int min_inliers = (min_characters+2)*5*0.8; //+2 (start&stop), *5 (stripes per char), *0.8 (margin)
-	double max_px_dist = (bar_height_px_min+bar_height_px_max)*0.5*0.025; //Maximum distance from RANSAC line to a point
+	int min_inliers = (min_characters+2)*5*0.75; //+2 (start&stop), *5 (stripes per char), *0.x (margin)
+	double max_px_dist = (bar_height_px_min+bar_height_px_max)*0.5*0.05; //Maximum distance from RANSAC line to a point
 
 	vector<RotatedRect> stripeCandidates;
 	for(int i = 0; i >= 0; i = hierarchy[i][0] ) {
@@ -468,14 +468,17 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 	
 	std::vector<Point> vecPtRectCenter = util::vecrotrect2vecpt(stripeCandidates);
 	std::vector<std::vector<int> > vecGroupIdxs = util::groupPoints(vecPtRectCenter, bar_dist_group_px_max, min_inliers);
-	std::vector<std::vector<cv::Point> > vecGroupPts(vecGroupIdxs.size());
+	//std::vector<std::vector<cv::Point> > vecGroupPts(vecGroupIdxs.size());
+	std::vector<std::vector<cv::RotatedRect> > vecGroupRects(vecGroupIdxs.size());
 
 	//Relate indexes to points and add to group vector
 	for (int i=0; i<vecGroupIdxs.size(); i++){
-		vecGroupPts[i].resize(vecGroupIdxs[i].size());
+		//vecGroupPts[i].resize(vecGroupIdxs[i].size());
+		vecGroupRects[i].resize(vecGroupIdxs[i].size());
 		for (int j=0; j<vecGroupIdxs[i].size(); j++){
 			//cout << i << "," << j << endl;
-			vecGroupPts[i][j] = vecPtRectCenter[vecGroupIdxs[i][j]];
+			//vecGroupPts[i][j] = vecPtRectCenter[vecGroupIdxs[i][j]];
+			vecGroupRects[i][j] = stripeCandidates[vecGroupIdxs[i][j]];
 		}
 	}
 
@@ -506,7 +509,7 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 	//}
 	//cout << "vecGroupPts.size()=" << vecGroupPts.size() << endl;
 
-	if (vecGroupPts.size()==0){
+	if (vecGroupIdxs.size()==0){
 		string strErr = "Code 39 failed to ransac bars in a line.";
 		cout << strErr << endl;
 		return vecStripecodes;
@@ -516,8 +519,8 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 	vector<vector<int> > vecVecInlierIdx;
 	vector<Vec4f> vecLines;
 	vector<int> vecFromGroup; //Keeps track of which group the vecvecInlierIdx belongs to
-	for (int i=0; i<vecGroupPts.size(); i++){
-		cpRansac_barcode(vecGroupPts[i], min_inliers, max_px_dist, vecVecInlierIdx, vecLines, matImage);
+	for (int i=0; i<vecGroupRects.size(); i++){
+		cpRansac_barcode(vecGroupRects[i], min_inliers, max_px_dist, vecVecInlierIdx, vecLines, matImage);
 		vecFromGroup.resize(vecVecInlierIdx.size(), i);
 	}
 
@@ -648,9 +651,9 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 		stripeCode codeNow;
 
 		//Test three different thresholds to account for different amounts of ink (little ink/a lot of ink/etc)
-		int thresholds[]={165, 150, 180, 120, 200, 215};//THIS LIST IS IN ORDER OF BEST PERFORMING TRESHOLDS!
+		int thresholds[]={165, 150, 180, 120, 100, 200, 215};//THIS LIST IS IN ORDER OF BEST PERFORMING TRESHOLDS!
 		//int thresholds[]={150};
-		for (int j=0; j<6; j++){
+		for (int j=0; j<7; j++){
 			//cout << "j=" << j << endl;
 			Mat matBarcode1Dthres, matBarcode1Dmaxthres;
 			threshold(matBarcode1D, matBarcode1Dthres, thresholds[j], 255, THRESH_BINARY);
@@ -717,21 +720,21 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 
 
 
-void bc1D::cpRansac_barcode(std::vector<cv::Point> vecPtsIn, int min_inliers, double max_px_dist, std::vector< std::vector<int> > & vecVecInlierIdx, std::vector<cv::Vec4f> & vecLines, cv::Mat image){
+void bc1D::cpRansac_barcode(std::vector<cv::RotatedRect> vecRectsIn/*vecPtsIn*/, int min_inliers, double max_px_dist, std::vector< std::vector<int> > & vecVecInlierIdx, std::vector<cv::Vec4f> & vecLines, cv::Mat image){
 	//cout << "cpRansac_barcode().." << endl;
 
 	//This is a custom Ransac function that extracts lotsa lines
 	RNG rng;
 
-	bool debugransac = false;
+	const bool debugransac = false;
 
-	int minstart; //Amount of randomly chosen points RANSAC will start with
-	int numiter; //Amount of iterations
+	const int minstart = 2; //Amount of randomly chosen points RANSAC will start with
+	const int numiter = 10000; //Amount of iterations
 
-	minstart=2;
-	numiter=10000;
+	const double stripediff_min = 0.88; // 0.88=88%
+	const double stripediff_max = 1.12; // 1.12=12%
 
-	int numpts = vecPtsIn.size();
+	int numpts = vecRectsIn.size();
 
 	//This next array keeps track of which points we have already used
 	int incrnumsOK[numpts];
@@ -739,18 +742,19 @@ void bc1D::cpRansac_barcode(std::vector<cv::Point> vecPtsIn, int min_inliers, do
 		incrnumsOK[ii]=ii;
 	}
 
-	for(int i=0;i<numiter;i++){
+	for(int i=0; i<numiter; i++){
+		
 		Mat img_debug;
 		if (debugransac){
 			cout << "#i="<<i<< endl;
 			image.copyTo(img_debug);
 		}
-		vector<Point> vecPtCandidate;
-		vector<int> vecPtCandidateIdx;
+		vector<RotatedRect> vecRectsCandidate;
+		vector<int> vecRectsCandidateIdx;
 
 		int inliers_now=minstart;
 		//Make the array [0:1:numpts]
-		//This array will keep track of the numbers in vecPtsIn that we use
+		//This array will keep track of the numbers in vecRectsIn that we use
 		int incrnums[numpts];
 		for (int ii=0;ii<numpts;ii++){
 			incrnums[ii]=ii;
@@ -778,11 +782,11 @@ void bc1D::cpRansac_barcode(std::vector<cv::Point> vecPtsIn, int min_inliers, do
 				if (tries>5000){break;}
 			} else {
 				incrnums[rn]=-1;
-				vecPtCandidate.push_back(vecPtsIn[rn]);
-				vecPtCandidateIdx.push_back(rn);
+				vecRectsCandidate.push_back(vecRectsIn[rn]);
+				vecRectsCandidateIdx.push_back(rn);
 				if (debugransac){
 					//cout <<"  pt#"<<ii<<" (x,y)=("<<vecPtsIn[rn].x<<","<<vecPtsIn[rn].y<<")"<<endl;
-					circle(img_debug, vecPtsIn[rn], 12, Scalar(255,100,100), 2,CV_AA,0);
+					circle(img_debug, vecRectsIn[rn].center, 12, Scalar(255,100,100), 2,CV_AA,0);
 					//namedWindow("win", 0);
 					//imshow( "win", img_debug );
 					//waitKey(10);
@@ -791,10 +795,20 @@ void bc1D::cpRansac_barcode(std::vector<cv::Point> vecPtsIn, int min_inliers, do
 		}
 		if (tries>5000){break;}
 		
+		//We have now selected a few random candidates, compute the stripeheight from those
+		int stripeheight_now=0;
+		for (int s=0; s<vecRectsCandidate.size(); s++){
+			stripeheight_now += max(vecRectsCandidate[s].size.width, vecRectsCandidate[s].size.height); //Sum it up (later divide for average)
+		}
+		stripeheight_now = stripeheight_now/vecRectsCandidate.size(); //This is the average
+		
+
+
+
 		//Fit the line
 		Vec4f line;
-		Point pt1,pt2;
-		fitLine( Mat(vecPtCandidate), line, CV_DIST_L2,0,0.01,0.01);
+		Point2f pt1,pt2;
+		fitLine( cv::Mat(util::vecrotrect2vecpt(vecRectsCandidate)), line, CV_DIST_L2,0,0.01,0.01);
 
 		//Now get two points on this line
 		double dd = sqrt((double)line[0]*line[0] + (double)line[1]*line[1]);
@@ -817,22 +831,23 @@ void bc1D::cpRansac_barcode(std::vector<cv::Point> vecPtsIn, int min_inliers, do
 			waitKey(200);
 			//cout << line[0] << " "<< line[1] << " "<< line[2] << " "<< line[3] << endl;
 		}*/
-
 		//For every point not in maybe_inliers we iterate and add it to the set
 		for(int ii=0;ii<numpts;ii++){
 			if ((incrnums[ii]!=-1) && (incrnumsOK[ii]!=-1)){ //Dont chose points already in the model
-				Point pt0=vecPtsIn[ii];
+				Point2f pt0 = vecRectsIn[ii].center;
 				//Calculate the distance between this point and the line (model)
 				double dist=abs((pt2.x-pt1.x)*(pt1.y-pt0.y)-(pt1.x-pt0.x)*(pt2.y-pt1.y));
 				dist=dist/(sqrt( pow(double(pt2.x-pt1.x),2) + pow(double(pt2.y-pt1.y),2) ));
-				if (dist <= max_px_dist){
+				double longest_side = max(vecRectsIn[ii].size.width, vecRectsIn[ii].size.height);
+				double length_diff = longest_side/stripeheight_now;
+				if (dist <= max_px_dist && (length_diff > stripediff_min && length_diff < stripediff_max ) ){
 					incrnums[ii]=-1;//OK; Include it in the index
-					vecPtCandidate.push_back(vecPtsIn[ii]);
-					vecPtCandidateIdx.push_back(ii);
+					vecRectsCandidate.push_back(vecRectsIn[ii]);
+					vecRectsCandidateIdx.push_back(ii);
 
 					inliers_now++;
 					if (debugransac){
-						circle(img_debug, vecPtsIn[ii], 10, Scalar(100,255,100), 3,CV_AA,0);
+						circle(img_debug, vecRectsIn[ii].center, 10, Scalar(100,255,100), 3,CV_AA,0);
 					}
 				}
 			} else {
@@ -850,11 +865,11 @@ void bc1D::cpRansac_barcode(std::vector<cv::Point> vecPtsIn, int min_inliers, do
 				}
 			}
 
-			fitLine( Mat(vecPtCandidate), line, CV_DIST_L2,0,0.01,0.01);
+			fitLine( cv::Mat( util::vecrotrect2vecpt(vecRectsCandidate)), line, CV_DIST_L2, 0, 0.01, 0.01);
 
 			vecLines.push_back(line);
-			vector<Point> vecPtsNow;
-			vecVecInlierIdx.push_back(vecPtCandidateIdx);
+			//vector<Point> vecPtsNow;
+			vecVecInlierIdx.push_back(vecRectsCandidateIdx);
 
 			//circle(img_debug, Point(0,y), img_debug.rows/60, Scalar(100,200,100), 2,CV_AA,0);
 			if (debugransac){

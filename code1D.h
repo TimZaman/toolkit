@@ -129,7 +129,7 @@ namespace bc1D {
   stripeCode decode_stripes_zxing(cv::Mat);
 
 	std::vector<stripeCode> readStripeCode(cv::Mat, double);
-	void cpRansac_barcode(std::vector<cv::Point> vecPtsIn, int min_inliers, double max_px_dist, std::vector< std::vector<int> > & vecVecInlierIdx, std::vector<cv::Vec4f> & vecLines, cv::Mat image);
+	void cpRansac_barcode(std::vector<cv::RotatedRect> vecRectsIn, int min_inliers, double max_px_dist, std::vector< std::vector<int> > & vecVecInlierIdx, std::vector<cv::Vec4f> & vecLines, cv::Mat image);
 	
 	
 };	// END NAMESPACE bc1D //
