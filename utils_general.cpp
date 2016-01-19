@@ -3,6 +3,15 @@
 #include "utils_general.h"
 
 
+bool util::anySubstringInString(std::vector<std::string> vector_of_substrings, std::string str){
+	for (int i=0; i<vector_of_substrings.size(); i++){
+		if (str.find(vector_of_substrings[i]) != std::string::npos) {
+			return true;
+		}
+	}
+	return false;
+}
+
 std::string util::urlencode(const std::string &s){
 	static const char lookup[]= "0123456789abcdef";
 	std::stringstream e;
