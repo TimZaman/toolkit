@@ -65,12 +65,14 @@ namespace util{
 	enum enumSavetype{ SAVE_TIFF=0, SAVE_JPEG=1, SAVE_JP2=2, SAVE_RAW=3};
 
 	// === FUNCTIONS === //
+	bool anySubstringInString(std::vector<std::string>, std::string );
+
 	std::string urlencode(const std::string &s);
 
 	double calcMean(std::vector<int> scores);
 	double calcMean(std::vector<double> scores);
 	double calcMedian(std::vector<double> scores);
-	double calcMeanOfQuarterAndThreeQuarterPercentile(std::vector<double> scores);
+	double calcMeanOfQuarterAndThreeQuarterPercentile(std::vector<double>);
 	bool isValidURL(std::string);
 
 	void logASL(std::string);
