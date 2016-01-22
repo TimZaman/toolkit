@@ -43,7 +43,7 @@
 	#include <asl.h> //Apple System Logger API
 #endif
 
-#include "toolkit/utils_general.h"
+#include "utils_general.h"
 
 namespace util{
 	//OpenCV related
