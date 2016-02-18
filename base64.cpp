@@ -1,11 +1,12 @@
-
+/**
+--------------------------------------------------------------------------------
+-   Module      :   base64.h
+-   Description :   Just another Base64 encoding/decoding class
+-   Author      :   Tim Zaman, 18-FEB-2016
+--------------------------------------------------------------------------------
+*/
 
 #include "base64.h"
-#include <iostream>
-
-#include <stdint.h>
-#include <stdlib.h>
-
 
 static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -17,10 +18,7 @@ static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                 '4', '5', '6', '7', '8', '9', '+', '/'};
 static int mod_table[] = {0, 2, 1};
 
-
-
 void b64::build_decoding_table() {
-
 	this->decoding_table = (char *) malloc(256);
 
 	for (int i = 0; i < 64; i++){
