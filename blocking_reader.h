@@ -1,18 +1,31 @@
-//
-// blocking_reader.h - a class that provides basic support for  
-// blocking & time-outable single character reads from 
-// boost::asio::serial_port.
-//
-// use like this:
-// 
-// 	blocking_reader reader(port, 500);
-//
-//	char c;
-//
-//	if (!reader.read_char(c))
-//		return false;
-//
-//
+/**
+--------------------------------------------------------------------------------
+-   Module      :   blocking_reader.h
+-   Description :   A class that provides basic support for  
+-                   blocking & time-outable single character reads from 
+-                   boost::asio::serial_port.
+-   Author      :   Unknown
+-                   Tim Zaman, 18-FEB-2016
+--------------------------------------------------------------------------------
+*/
+
+/*
+
+Copyright and licence unknown.
+ 
+*/
+
+/*
+
+Usage:
+
+blocking_reader reader(port, 500);
+char c;
+if (!reader.read_char(c)){
+	return false;
+}
+
+*/
 
 #ifndef BLOCKING_READER_H
 #define BLOCKING_READER_H

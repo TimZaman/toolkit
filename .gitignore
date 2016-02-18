@@ -1,0 +1,8 @@
+.DS_Store
+CMakeCache.txt
+CMakeFiles
+Makefile
+*.cmake
+install_manifest.txt
+*.sublime-project
+*.sublime-workspace
