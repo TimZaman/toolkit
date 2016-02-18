@@ -382,7 +382,7 @@ int util::xfilelength(int fd){ //is static in .h
 	return(sb.st_size);
 }
 
-
+/*
 std::string util::fileformatToRegex(std::string fileformat ){
 	//Escape chars for regex first..
 	//Change {%04d} to \d{4}
@@ -403,7 +403,7 @@ std::string util::fileformatToRegex(std::string fileformat ){
 
 
 	boost::regex regex_num("\\{(%[0-9]*d)\\}");
-	strRegex = boost::regex_replace(strRegex, regex_num, "\\\\d{4}");//TODO use good amount of digits
+	strRegex = boost::regex_replace(strRegex, regex_num, "\\\\d{4}");//@TODO use good amount of digits !!!!!!!!!!!!!
 	std::cout << "strRegex=" << strRegex << std::endl;
 
 	//boost::regex regex_anyBrace("\\{(.*?)\\}");
@@ -415,24 +415,23 @@ std::string util::fileformatToRegex(std::string fileformat ){
 	//Now put a a priory regex in
 	//strRegex.insert(0, ".*"); //Accept any prependage
 
-
 	return strRegex;
-}
+}*/
 
 
 
 //std::vector<std::string> regexReplaceInVector(vecFILENAMING, number_now, "\\{(%[0-9]*d)\\}"){
 std::vector<std::string> util::regexReplaceInVector(std::vector<std::string> vecNames, std::string strInsert, std::string strRegex){
-  boost::regex regexNow(strRegex);
-  for (int i=0;i<vecNames.size();i++){
-    vecNames[i] = boost::regex_replace(vecNames[i], regexNow, strInsert);
-  }
-  return vecNames;
+	std::cout << "regexReplaceInVector([";
+	for (int i=0; i<vecNames.size(); i++){ std::cout << vecNames[i] << "], ";}
+	std::cout << strInsert << ", " << strRegex << std::endl;	
+
+	boost::regex regexNow(strRegex);
+	for (int i=0;i<vecNames.size();i++){
+		vecNames[i] = boost::regex_replace(vecNames[i], regexNow, strInsert);
+	}
+	return vecNames;
 }
-
-
-
-
 
 std::string util::ReplaceAll(std::string str, const std::string& from, const std::string& to) {
     size_t start_pos = 0;
@@ -443,67 +442,137 @@ std::string util::ReplaceAll(std::string str, const std::string& from, const std
     return str;
 }
 
-std::vector<std::string> util::getRegexMatches(std::string strRegex, std::string strMatches){
-	std::cout << "getRegexMatches(" << strRegex << "," << strMatches << ")" << std::endl;
-	std::vector<std::string> vecMatches;
-	boost::regex e(strRegex); 
-	std::string chat_input(strMatches);
+std::vector<std::string> util::getRegexMatches(std::string str_regex, std::string str_matches){
+	std::cout << "getRegexMatches(" << str_regex << "," << str_matches << ")" << std::endl;
+	std::vector<std::string> vec_matches;
+	boost::regex e(str_regex); 
 	boost::match_results<std::string::const_iterator> results;
-	if (boost::regex_match(chat_input, results, e)){
+	if (boost::regex_match(str_matches, results, e)){
 		for (int i=1; i<results.size(); i++){
-			vecMatches.push_back(results[i]);
+			vec_matches.push_back(results[i]);
 		}
 	}
-	for (int i=0; i<vecMatches.size(); i++){
-		std::cout << "vecMatches[" << i << "]=" << vecMatches[i] << std::endl;
+	for (int i=0; i<vec_matches.size(); i++){
+		std::cout << "vec_matches[" << i << "]=" << vec_matches[i] << std::endl;
 	}
-	return vecMatches;
+	return vec_matches;
+}
+
+void splitDoubleRegex(std::vector<std::string> & vecMatchesFormat, std::vector<std::string> & vecMatchesFilename){
+	std::cout << "splitDoubleRegex([";
+	for (int i=0; i<vecMatchesFormat.size(); i++){ std::cout << vecMatchesFormat[i] << ",";}
+	std::cout <<"],[";
+	for (int i=0; i<vecMatchesFilename.size(); i++){ std::cout << vecMatchesFilename[i] << ",";}
+	std::cout << "])" << std::endl;
+
+	boost::regex regex_brace("(\\{.*?\\})(\\{.*?\\})"); //(?<!\\d){(.*?)}
+	std::vector<std::string> str_doubles_format(2), str_doubles_name(2);
+	for (int i=0; i<vecMatchesFormat.size(); i++){
+		//Find the ..}{.. split location
+		std::size_t splitpos = vecMatchesFormat[i].find("}{");
+		if (splitpos!=std::string::npos){
+			std::cout << "Split location found at: " << splitpos << std::endl;
+		} else {
+			std::cout << "No '{}{}' regex to split found." << std::endl;
+			continue;
+		}
+		splitpos++;
+		str_doubles_format[0] = vecMatchesFormat[i].substr(0, splitpos);
+		str_doubles_format[1] = vecMatchesFormat[i].substr(splitpos, std::string::npos);
+
+
+		//correlate the split format to the filename part it corresponds to
+		std::string namepart = vecMatchesFilename[i];
+		//this is for {digit}{something}
+		if (str_doubles_format[0][1]=='%' && str_doubles_format[0][str_doubles_format[0].length()-2]=='d'){
+			//This is the digit
+			int digitloc=-1;
+			for (int id=0; id<namepart.length(); id++){
+				if (isdigit(namepart[id])){
+					digitloc=id	;
+				} else {
+					break;
+				}
+			}
+			digitloc++;
+			//Split at the point where the digits stop
+			str_doubles_name[0] = vecMatchesFilename[i].substr(0, digitloc);
+			str_doubles_name[1] = vecMatchesFilename[i].substr(digitloc, std::string::npos);
+		}
+
+		//this is for {something}{digit}..
+
+
+		vecMatchesFilename[i] = str_doubles_name[0];
+		vecMatchesFilename.insert( vecMatchesFilename.begin()+i, str_doubles_name[1] );
+		vecMatchesFormat[i] = str_doubles_format[0];
+		vecMatchesFormat.insert( vecMatchesFormat.begin()+i, str_doubles_format[1] );
+		i++; //Since we added another index we need to doubleiterate here
+	}
+
+	std::cout << "str_doubles_name[0]=" << str_doubles_name[0] << std::endl;
+	std::cout << "str_doubles_name[1]=" << str_doubles_name[1] << std::endl;
+	std::cout << "str_doubles_format[0]=" << str_doubles_format[0] << std::endl;
+	std::cout << "str_doubles_format[1]=" << str_doubles_format[1] << std::endl;
+
+	std::cout << "end splitDoubleRegex()" << std::endl;
 }
 
 
-
 std::map<std::string, std::string> util::relateFormatAndFile(std::string strFormat, std::string strFilename){
-  // ex: relateFormatAndFile("/tif/{var}_{\%04d}.tif","/home/bla/tif/test_01234.tif");
-  std::cout << "relateFormatAndFile(" << strFormat << ", " << strFilename << ")" << std::endl;
-  std::map<std::string, std::string> mapFormatAndFile;
+	// ex: relateFormatAndFile("/tif/{var}_{\%04d}.tif","/home/bla/tif/test_01234.tif");
+	std::cout << "relateFormatAndFile(" << strFormat << ", " << strFilename << ")" << std::endl;
+	std::map<std::string, std::string> mapFormatAndFile;
 
-  std::string strFormatEsc, strFilenameEsc;
+	std::string strFormatEsc, strFilenameEsc;
 
-  //Escape the strings
-  strFormatEsc = escapeRegex(strFormat);
+	//Escape the strings
+	strFormatEsc = escapeRegex(strFormat);
 
-  std::cout << "Escaped = " << strFormatEsc << ", " << strFilename << "" << std::endl;
-
-
-  //    \/tif\/\{var\}_\{%04d\}\.tif
-  boost::regex regex_num(".\\{(.*?)\\}");
-  std::string strFormatRx;
-  strFormatEsc = ".*"+strFormatEsc; //Match any prefix (like hotfolder dir etc)
-  strFormatRx = boost::regex_replace(strFormatEsc, regex_num, "(.*?)"); //TODO get correct amount of numbers    ->THIS CRASHES ON UBUNTU+NLS?
-  std::cout << "strFormatRx=" << strFormatRx << std::endl;
+	std::cout << "Escaped = " << strFormatEsc << ", " << strFilename << "" << std::endl;
 
 
-    std::vector<std::string> vecMatchesFormat = getRegexMatches(strFormatRx, strFormat);
-    std::vector<std::string> vecMatchesFilename = getRegexMatches(strFormatRx, strFilename);
+	//    \/tif\/\{var\}_\{%04d\}\.tif
+	boost::regex regex_num(".\\{(.*?)\\}");
+	std::string strFormatRx;
+	strFormatEsc = ".*"+strFormatEsc; //Match any prefix (like hotfolder dir etc)
+	strFormatRx = boost::regex_replace(strFormatEsc, regex_num, "(.*?)"); //TODO get correct amount of numbers    ->THIS CRASHES ON UBUNTU+NLS?
+	std::cout << "strFormatRx=" << strFormatRx << std::endl;
 
-    if (vecMatchesFormat.size() != vecMatchesFilename.size()){
-      std::cout << "vecMatches sizes do not correspond, returning." << std::endl;
-      return mapFormatAndFile; //No match here.
-    }
 
-  for (int i=0;i<vecMatchesFormat.size();i++){
-    std::cout << vecMatchesFormat[i] << "=" << vecMatchesFilename[i] << std::endl;
-    mapFormatAndFile[vecMatchesFormat[i]] = vecMatchesFilename[i];
-  }
+	std::vector<std::string> vecMatchesFormat = getRegexMatches(strFormatRx, strFormat);
+	std::vector<std::string> vecMatchesFilename = getRegexMatches(strFormatRx, strFilename);
 
-  //std::cout << " === END relateFormatAndFile()" << std::endl;
-  return mapFormatAndFile;
+	if (vecMatchesFormat.size() != vecMatchesFilename.size()){
+		std::cout << "vecMatches sizes do not correspond, returning." << std::endl;
+		return mapFormatAndFile; //No match here.
+	}
+
+	//Now here it is still possible to have connected regex string, fe {%06d}{datamatrix}.
+	//We will now separate these and give them their own index in the vectors
+	splitDoubleRegex(vecMatchesFormat, vecMatchesFilename);
+
+
+	if (vecMatchesFormat.size() != vecMatchesFilename.size()){
+		std::cout << "vecMatches sizes do not correspond, returning." << std::endl;
+		return mapFormatAndFile; //No match here.
+	}
+
+	for (int i=0;i<vecMatchesFormat.size();i++){
+		std::cout << vecMatchesFormat[i] << "=" << vecMatchesFilename[i] << std::endl;
+		mapFormatAndFile[vecMatchesFormat[i]] = vecMatchesFilename[i];
+	}
+
+	//std::cout << " === END relateFormatAndFile()" << std::endl;
+	return mapFormatAndFile;
 }
 
 
 
 std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string> vecFormats, std::string filename, int numAdd, int &numNow, std::vector<std::string> &vecNumFormats){
-	std::cout << "correlateFileVectorFormat(.., filename=" << filename << ")" << std::endl;
+	std::cout << "correlateFileVectorFormat([";
+	for (int i=0; i<vecFormats.size();i++){ std::cout << vecFormats[i] << ",";}
+	std::cout << "]," << filename << "," << numAdd << "," << numNow << ")" << std::endl;
 	//vecNumFormats is everything in the format replaced except the actual number;
 	//numNow is the current number, numAdd is the number to be added.
 
@@ -527,6 +596,7 @@ std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string
 
 	vecNumFormats = vecFormats;
 	std::string number_string;
+
 	/*
 	foreach(auto i, mapFormatToFile){
 		std::cout << boost::format("%d = %s\n") % i.first % i.second;
@@ -538,19 +608,23 @@ std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string
 	}
 	*/
 
-
-
-
 	typedef std::map<std::string, std::string>::iterator it_type;
 	for(it_type i = mapFormatToFile.begin(); i != mapFormatToFile.end(); i++) {
 		// i->first = key
 		// i->second = value
 	
-		std::cout << boost::format("%d = %s\n") % i->first % i->second;
+		std::cout << std::string(i->first) << " -> " << std::string(i->second) << std::endl;
+
+		if (i->first.length()<3){
+			continue;
+		}
+
+		//std::cout << boost::format("%d = %s\n") % i->first % i->second;
 		if (i->first[1]=='%' && i->first[i->first.length()-2]=='d'){ //Skip .%*d. files (numberformats)
 			number_string = i->second;
 			continue;
 		}
+		//
 		vecNumFormats = regexReplaceInVector(vecNumFormats, i->second, escapeRegex(i->first));
 	}
 

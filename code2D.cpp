@@ -14,6 +14,179 @@ using namespace zxing::datamatrix;
 
 
 
+//PopulateArrayFromMatrix : reg->sizeIdx
+// - TallyModuleJumps: reg->offColor(=0), reg->onColor (=255), reg->flowBegin.plane (=0)
+// - - ReadModuleColor : reg->fit2raw
+// - - - dmtxDecodeGetPixelValue : dec->image (then general image data)
+
+// /**
+//  * @struct DmtxRegion
+//  * @brief DmtxRegion
+//  */
+// typedef struct DmtxRegion_struct {
+
+//    /* Trail blazing values */
+//    int             jumpToPos;     /* */
+//    int             jumpToNeg;     /* */
+//    int             stepsTotal;    /* */
+//    DmtxPixelLoc    finalPos;      /* */
+//    DmtxPixelLoc    finalNeg;      /* */
+//    DmtxPixelLoc    boundMin;      /* */
+//    DmtxPixelLoc    boundMax;      /* */
+//    DmtxPointFlow   flowBegin;     /* */
+
+//    /* Orientation values */
+//    int             polarity;      /* */
+//    int             stepR;
+//    int             stepT;
+//    DmtxPixelLoc    locR;          /* remove if stepR works above */
+//    DmtxPixelLoc    locT;          /* remove if stepT works above */
+
+//    /* Region fitting values */
+//    int             leftKnown;     /* known == 1; unknown == 0 */
+//    int             leftAngle;     /* hough angle of left edge */
+//    DmtxPixelLoc    leftLoc;       /* known (arbitrary) location on left edge */
+//    DmtxBestLine    leftLine;      /* */
+//    int             bottomKnown;   /* known == 1; unknown == 0 */
+//    int             bottomAngle;   /* hough angle of bottom edge */
+//    DmtxPixelLoc    bottomLoc;     /* known (arbitrary) location on bottom edge */
+//    DmtxBestLine    bottomLine;    /* */
+//    int             topKnown;      /* known == 1; unknown == 0 */
+//    int             topAngle;      /* hough angle of top edge */
+//    DmtxPixelLoc    topLoc;        /* known (arbitrary) location on top edge */
+//    int             rightKnown;    /* known == 1; unknown == 0 */
+//    int             rightAngle;    /* hough angle of right edge */
+//    DmtxPixelLoc    rightLoc;      /* known (arbitrary) location on right edge */
+
+//    /* Region calibration values */
+//    int             onColor;       /* */
+//    int             offColor;      /* */
+//    int             sizeIdx;       /* Index of arrays that store Data Matrix constants */
+//    int             symbolRows;    /* Number of total rows in symbol including alignment patterns */
+//    int             symbolCols;    /* Number of total columns in symbol including alignment patterns */
+//    int             mappingRows;   /* Number of data rows in symbol */
+//    int             mappingCols;   /* Number of data columns in symbol */
+
+//    /* Transform values */
+//    DmtxMatrix3     raw2fit;       /* 3x3 transformation from raw image to fitted barcode grid */
+//    DmtxMatrix3     fit2raw;       /* 3x3 transformation from fitted barcode grid to raw image */
+// } DmtxRegion;
+
+
+
+/*
+std::string doDmtxDecode(const Mat &matImageIn, long timeout_ms){
+	std::cout << "doDmtxDecode(..," << timeout_ms << ")" << std::endl;
+	std::string string_libdmtx;
+	//Set decoding properties
+	cv::Mat matImage;
+	double scale = 2; //It seems the scale has to be at least '2'
+	int border_add = 1;
+	copyMakeBorder(matImageIn, matImage, border_add, border_add, border_add, border_add, BORDER_CONSTANT, 255);
+	resize(matImage, matImage, cv::Size(), scale, scale, INTER_AREA); 
+
+	DmtxImage *img = dmtxImageCreate(matImage.data, matImage.cols, matImage.rows, DmtxPack8bppK);
+	assert(img != NULL);
+
+	DmtxDecode  *dec = dmtxDecodeCreate(img, 1);
+	assert(dec != NULL);
+
+	DmtxTime timeout = dmtxTimeAdd(dmtxTimeNow(), timeout_ms);
+	
+	//DmtxRegion  *reg = dmtxRegionFindNext(dec, &timeout);
+	DmtxRegion *reg = (DmtxRegion *)malloc(sizeof(DmtxRegion));
+	reg->sizeIdx=0;
+	static const int symbolDim[] = { 10, 12, 14, 16, 18, 20,  22,  24,  26}; //.. (from libdmtx)
+	for (int i=0; i<9; i++){
+		if (matImageIn.cols ==symbolDim[i]){
+			reg->sizeIdx=i;
+			break;
+		}
+	}
+	reg->offColor=255;
+	reg->onColor=0;
+	reg->flowBegin.plane=0;
+	
+	reg->fit2raw[0][0]=scale*matImageIn.cols; //scale(x)
+	reg->fit2raw[0][1]=0;
+	reg->fit2raw[0][2]=0;
+	reg->fit2raw[1][0]=0;
+	reg->fit2raw[1][1]=scale*matImageIn.rows; //scale(y)
+	reg->fit2raw[1][2]=0;
+	reg->fit2raw[2][0]=border_add*scale; //translation(x)
+	reg->fit2raw[2][1]=border_add*scale; //translation(y)
+	reg->fit2raw[2][2]=1; //unity
+	
+	if(reg != NULL) {
+		std::cout << "doDmtxDecode::Found Region!" << std::endl;
+		DmtxMessage *msg = dmtxDecodeMatrixRegion(dec, reg, DmtxUndefined);
+
+		if(msg != NULL) {
+			std::cout << "doDmtxDecode::Found Message!" << std::endl;
+			fputs("doDmtxDecode::output: \"", stdout);
+			fwrite(msg->output, sizeof(unsigned char), msg->outputIdx, stdout);
+			string_libdmtx = std::string( (const char*) msg->output, msg->outputSize);
+			fputs("\"\n", stdout);
+			dmtxMessageDestroy(&msg);
+		}
+		dmtxRegionDestroy(&reg);
+	}
+
+	dmtxDecodeDestroy(&dec);
+	dmtxImageDestroy(&img);
+
+	std::cout << "END doDmtxDecode()" << std::endl;
+	return string_libdmtx;
+}*/
+
+
+// typedef struct DmtxMessage_struct {
+//    size_t          arraySize;     /* mappingRows * mappingCols */
+//    size_t          codeSize;      /* Size of encoded data (data words + error words) */
+//    size_t          outputSize;    /* Size of buffer used to hold decoded data */
+//    int             outputIdx;     /* Internal index used to store output progress */
+//    int             padCount;
+//    unsigned char  *array;         /* Pointer to internal representation of Data Matrix modules */
+//    unsigned char  *code;          /* Pointer to internal storage of code words (data and error) */
+//    unsigned char  *output;        /* Pointer to internal storage of decoded output */
+// } DmtxMessage;
+
+std::string doDmtxDecode(const Mat &matImageIn, long timeout_ms){
+	std::cout << "doDmtxDecode(..," << timeout_ms << ")" << std::endl;
+	std::string string_libdmtx;
+	
+	int sizeIdx = getSizeIdxFromSymbolDimension(matImageIn.cols, matImageIn.rows);
+
+	DmtxMessage * msg = dmtxMessageCreate(sizeIdx, DmtxFormatMatrix);
+	
+	int idx=0;
+	for (int h=1; h<matImageIn.rows-1; h++){
+		for (int w=1; w<matImageIn.cols-1; w++){
+			msg->array[idx] = matImageIn.at<uchar>(h,w)==255 ? DmtxModuleOff : DmtxModuleOnRGB;
+			msg->array[idx] |= DmtxModuleAssigned;
+			idx++;
+			
+		}
+	}
+
+	dmtxDecodePopulatedArray(sizeIdx, msg, -1);
+
+	if(msg != NULL) {
+		std::cout << "doDmtxDecode::Found Message!" << std::endl;
+		fputs("doDmtxDecode::output: \"", stdout);
+		fwrite(msg->output, sizeof(unsigned char), msg->outputIdx, stdout);
+		string_libdmtx = std::string( (const char*) msg->output, msg->outputSize);
+		fputs("\"\n", stdout);
+		dmtxMessageDestroy(&msg); //[TZ] Is this okay?
+	}
+	
+
+	std::cout << "END doDmtxDecode()" << std::endl;
+	return string_libdmtx;
+}
+
+
+
 std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 	cout << "bc2D::decode_pure_barcode()" << endl;
 
@@ -33,7 +206,6 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 
 	//Auto enhance darkness and brightness
 	util::autoClipBrighten(matImageK, 0.10, 0.90);
-
 
 	//Extract the width and height of the barcode.
 	//Currently we only use 10, 12, 14.
@@ -145,6 +317,48 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 	thresholds.push_back(minVal);
 
 	for (int i=0; i<thresholds.size(); i++){
+		cv::Mat matBitsThres;
+		threshold(matBits, matBitsThres, thresholds[i], 255, THRESH_BINARY);
+
+		//Verify the L-shape and the timing
+		const double min_border_validity_percentage = 0.85;
+		int validity_points=0;
+		int validity_points_max=matBitsThres.cols*2 + matBitsThres.rows*2 - 4; //length of entire edge
+		//Vertical Check
+		for (int h=0; h<matBitsThres.rows; h++){
+			if(matBitsThres.at<uchar>(h, 0)==0) { //Continuous part of L-shape
+				validity_points++;
+			}
+			if((matBitsThres.at<uchar>(h, matBitsThres.cols-1)==0) == h%2) { // Alternating test
+				validity_points++;	
+			} 
+		}
+		//Horizontal check
+		for (int w=0; w<matBitsThres.cols; w++){
+			if(matBitsThres.at<uchar>(matBitsThres.rows-1, w)==0) {//Continuous part of L-shape
+				validity_points++;
+			}
+			if((matBitsThres.at<uchar>(0, w)==255) == w%2) { // Alternating test
+				validity_points++;	
+			} 
+		}
+		validity_points-=4; //Subtract redundant points (4 corners)
+		if (validity_points < validity_points_max*min_border_validity_percentage){
+			//std::cout << " rejecting validity (" << validity_points << "/" << validity_points_max << ")" << std::endl;
+			continue;
+		}
+
+		
+		//imwrite("/Users/tzaman/Desktop/bc_" + std::to_string(thresholds[i]) + ".tif",matBitsThres); //@TODO REMOVE ME
+		std::string string_libdmtx = doDmtxDecode(matBitsThres, 500);
+		if (!string_libdmtx.empty()){
+			bcString = string_libdmtx;
+			break;
+		}
+
+		/*
+
+
 		Ref<BitMatrix> bits(new BitMatrix(width));
 		for (int w=0; w<width; w++){
 			for (int h=0; h<height; h++){
@@ -161,6 +375,7 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 			bcString = decoderResult->getText()->getText();
 
 			cout << "Found barcode:" << bcString << endl;
+			break;
 			//cout << decoderResult->getRawBytes() << endl;
 
 		}catch (const zxing::ChecksumException& e) {  
@@ -176,7 +391,7 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 	    } catch (...) { //GOTTA CATCH EM ALL *POKEMON*
 	    	//POKEMON!
 	    	cout << "Pokemon ZXING Catch!" << endl;
-	    }
+	    }*/
 	}
 
 	cout << " decode_pure_barcode END" << endl;
@@ -679,6 +894,8 @@ std::string bc2D::readQR(cv::Mat matImage, double dpi){
 std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_inch_min, double barcode_width_inch_max, int bin_thres){
 	cout << "readDMTX()" << endl;
 
+	//@TODO: convert 16bit input to 8bit
+
 	bool debugbarcode = false; //FOR PRODUCTION PUT TO FALSE
 
 	//Mat matImage = imread("/Users/tzaman/Desktop/bc.tif");
@@ -755,7 +972,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 		double a=contourArea( contours[i],false);  //  Find the area of contour
 		if (a<25){continue;}
 		//cout << i << endl;
-
+		if (contours[i].size()<4){continue;}
 		
 		RotatedRect rRect = util::minAreaSquare(contours[i]);
 
@@ -833,26 +1050,29 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 
 		//Compare with the ideal histogram and compute score
 		//Compute cross correction
-		double cumscore=0;
-		for (int i=0;i<16;i++){
-			cumscore += idealhist[i]*hist32.at<float>(i);
-		}
-
-		//cout << "cumscore=" << cumscore << endl;
-
-		if (debugbarcode){
-			imwrite("/Users/tzaman/Desktop/bc/" + boost::lexical_cast<string>(i)+"_dmtx_rect_hist_c" + std::to_string((int)round(cumscore*100)) +".png", matHist);
-		}
-
+		//double cumscore=0;
+		//for (int i=0;i<16;i++){
+		//	cumscore += idealhist[i]*hist32.at<float>(i);
+		//}
+		////cout << "cumscore=" << cumscore << endl;
+		//if (debugbarcode){
+		//	imwrite("/Users/tzaman/Desktop/bc/" + boost::lexical_cast<string>(i)+"_dmtx_rect_hist_c" + std::to_string((int)round(cumscore*100)) +".png", matHist);
+		//}
 		//A cumscore value of 1 is the maximum that can be attained.
-		if (cumscore < hist_thres){
-			cout << "histogram cumscore too low (" << cumscore << " / " << hist_thres << "). rejecting candidate " << i <<"." << endl;
+		//if (cumscore < hist_thres){
+			//std::cout << "histogram cumscore too low (" << cumscore << " / " << hist_thres << "). rejecting candidate " << i <<"." << std::endl;
 			//continue;
-		}
+		//}
 
 		//See if we can read it purely..
 
 		Mat matPureCrop = util::crop(matImage,rRect);
+
+		//Check if the size is still in a normal range
+		if (matPureCrop.total()<50){
+			continue;
+		}
+
 		//imwrite("dmtx_purecrop.png", matPureCrop);
 		std::string strBarcodePure = decode_pure_barcode(matPureCrop);
 
@@ -860,6 +1080,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 			cout << "Wow! Found a pure datamatrix (" << strBarcodePure << ")." << endl;
 			return strBarcodePure;
 		}
+
 
 
 
