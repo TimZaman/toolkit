@@ -381,8 +381,8 @@ cv::Mat util::crop(cv::Mat matImage, cv::RotatedRect rRect){
 		expand(rBounding, d);
 	}
 
-	std::cout << rBounding.tl() << std::endl;
-	std::cout << rBounding.br() << std::endl;
+	//std::cout << rBounding.tl() << std::endl;
+	//std::cout << rBounding.br() << std::endl;
 
 	//Constrain it
 	cv::Rect rBoundingInside = constrainRectInSize(rBounding, matImage.size());
@@ -763,43 +763,44 @@ cv::RotatedRect util::minAreaSquare( cv::InputArray _points ){
 	//It is changed such that it gives the minimal enclosing *square* as opposed to rectangle.
 	//It's very possible it will not actually yield a square shape, but you can expand
 	//all sides to the widest one, this will be the enclosing square itself.
-    cv::Mat hull;
-    cv::Point2f out[3];
-    cv::RotatedRect box;
+	cv::Mat hull;
+	cv::Point2f out[3];
+	cv::RotatedRect box;
 
-    cv::convexHull(_points, hull, true, true);
+	cv::convexHull(_points, hull, true, true);
 
-    if( hull.depth() != CV_32F ) {
-        cv::Mat temp;
-        hull.convertTo(temp, CV_32F);
-        hull = temp;
-    }
+	if( hull.depth() != CV_32F ) {
+		cv::Mat temp;
+		hull.convertTo(temp, CV_32F);
+		hull = temp;
+	}
 
-    int n = hull.checkVector(2);
-    const cv::Point2f* hpoints = hull.ptr<cv::Point2f>();
+	int n = hull.checkVector(2);
+	const cv::Point2f* hpoints = hull.ptr<cv::Point2f>();
 
-    if( n > 2 ) {
-        rotatingCalipers( hpoints, n, (float*)out );
-        box.center.x = out[0].x + (out[1].x + out[2].x)*0.5f;
-        box.center.y = out[0].y + (out[1].y + out[2].y)*0.5f;
-        box.size.width = (float)std::sqrt((double)out[1].x*out[1].x + (double)out[1].y*out[1].y);
-        box.size.height = (float)std::sqrt((double)out[2].x*out[2].x + (double)out[2].y*out[2].y);
-        box.angle = (float)atan2( (double)out[1].y, (double)out[1].x );
-    } else if( n == 2 ) {
-        box.center.x = (hpoints[0].x + hpoints[1].x)*0.5f;
-        box.center.y = (hpoints[0].y + hpoints[1].y)*0.5f;
-        double dx = hpoints[1].x - hpoints[0].x;
-        double dy = hpoints[1].y - hpoints[0].y;
-        box.size.width = (float)std::sqrt(dx*dx + dy*dy);
-        box.size.height = 0;
-        box.angle = (float)atan2( dy, dx );
-    } else {
-        if( n == 1 )
-            box.center = hpoints[0];
-    }
+	if( n > 2 ) {
+		rotatingCalipers( hpoints, n, (float*)out );
+		box.center.x = out[0].x + (out[1].x + out[2].x)*0.5f;
+		box.center.y = out[0].y + (out[1].y + out[2].y)*0.5f;
+		box.size.width = (float)std::sqrt((double)out[1].x*out[1].x + (double)out[1].y*out[1].y);
+		box.size.height = (float)std::sqrt((double)out[2].x*out[2].x + (double)out[2].y*out[2].y);
+		box.angle = (float)atan2( (double)out[1].y, (double)out[1].x );
+	} else if( n == 2 ) {
+		box.center.x = (hpoints[0].x + hpoints[1].x)*0.5f;
+		box.center.y = (hpoints[0].y + hpoints[1].y)*0.5f;
+		double dx = hpoints[1].x - hpoints[0].x;
+		double dy = hpoints[1].y - hpoints[0].y;
+		box.size.width = (float)std::sqrt(dx*dx + dy*dy);
+		box.size.height = 0;
+		box.angle = (float)atan2( dy, dx );
+	} else {
+		if( n == 1 ) {
+			box.center = hpoints[0];
+		}
+	}
 
-    box.angle = (float)(box.angle*180/CV_PI);
-    return box;
+	box.angle = (float)(box.angle*180/CV_PI);
+	return box;
 }
 
 

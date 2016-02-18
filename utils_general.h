@@ -36,6 +36,8 @@
 	#include <boost/foreach.hpp>
 #endif
 
+#include <regex>
+
 #include <opencv2/opencv.hpp>
 
 #include <libexif/exif-data.h> 
@@ -83,7 +85,7 @@ namespace util{
 	std::map<std::string, std::string> relateFormatAndFile(std::string, std::string);
 	std::vector<std::string> getRegexMatches(std::string strRegex, std::string strMatches);
 	std::string ReplaceAll(std::string str, const std::string& from, const std::string& to);
-	std::string fileformatToRegex(std::string);
+	//std::string fileformatToRegex(std::string);
 	std::string regex_escape(const std::string&);
 
 	int xfilelength(int );

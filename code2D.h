@@ -87,6 +87,8 @@
 
 #include "zxingwrapper.h" //ZXING
 
+#include <dmtx.h> 
+
 
 #include "sort.h"
 #include "utils_opencv.h"
