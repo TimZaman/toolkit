@@ -53,9 +53,19 @@ stripeCode bc1D::decode_stripes_zxing(cv::Mat matImage){
 	readers.push_back(zxing::Ref<zxing::oned::OneDReader>(new zxing::oned::Code39Reader()));
 	readers.push_back(zxing::Ref<zxing::oned::OneDReader>(new zxing::oned::Code128Reader()));
 
+	//@TODO: ONLY MEISE!!!!!!
+	//if (contains(this->projectName, "MEISE")){
+		readers.push_back(zxing::Ref<zxing::oned::OneDReader>(new zxing::oned::EAN13Reader()));
+	//}
+
 	std::vector<int> barcodetypes;
 	barcodetypes.push_back(3);
 	barcodetypes.push_back(5);
+
+	//@TODO: ONLY MEISE!!!!!!
+	//if (contains(this->projectName, "MEISE")){
+		barcodetypes[0] = 15; //swap code39 with UPC-A(15)
+	//} 
 
 	//Loop over normal reading direction mode and 180deg rotated
 	for (int oidx=0; oidx<=1; oidx++){
@@ -315,7 +325,7 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 	cout << "readStripeCode()" << endl;
 	std::vector<stripeCode> vecStripecodes;
 
-	bool debugstripecode = false; //MAKE SURE TO SET ME TO FALSE IN PRODUCTION
+	bool debugstripecode = false; //@TODO MAKE SURE TO SET ME TO FALSE IN PRODUCTION
 	bool useAdaptiveThersholding = true;
 
 	dpi = 400; //this works well for all scales and sizes..
