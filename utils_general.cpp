@@ -2,6 +2,23 @@
 
 #include "utils_general.h"
 
+std::vector<std::string> util::split(std::string data, std::string token){
+    std::vector<std::string> output;
+    int pos = std::string::npos;
+    do {
+        pos = data.find(token);
+        output.push_back(data.substr(0, pos));
+        if (std::string::npos != pos)
+            data = data.substr(pos + token.size());
+    } while (std::string::npos != pos);
+    return output;
+}
+
+std::string util::changeFileExtension(std::string filename, std::string new_extension){
+	// Note the new extension is supposed to have a period in it: i.e. '.jpg'
+	boost::filesystem::path p(filename);
+	return p.replace_extension(new_extension).string();
+}
 
 bool util::anySubstringInString(std::vector<std::string> vector_of_substrings, std::string str){
 	for (int i=0; i<vector_of_substrings.size(); i++){

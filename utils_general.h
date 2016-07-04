@@ -67,6 +67,8 @@ namespace util{
 	enum enumSavetype{ SAVE_TIFF=0, SAVE_JPEG=1, SAVE_JP2=2, SAVE_RAW=3};
 
 	// === FUNCTIONS === //
+	std::vector<std::string> split(std::string, std::string);
+	std::string changeFileExtension(std::string, std::string);
 	bool anySubstringInString(std::vector<std::string>, std::string );
 
 	std::string urlencode(const std::string &s);
