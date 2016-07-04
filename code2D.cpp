@@ -188,7 +188,7 @@ std::string doDmtxDecode(const Mat &matImageIn, long timeout_ms){
 
 
 std::string bc2D::decode_pure_barcode(cv::Mat matImage){
-	cout << "bc2D::decode_pure_barcode()" << endl;
+	//cout << "bc2D::decode_pure_barcode()" << endl;
 
 	string bcString="";
 	Mat matImageK_orig;
@@ -212,10 +212,12 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 
 	//Sample the grid, maybe do this by resizing the image down to the size of the barcode itself :)
 	Mat matBits;
-	int sizes[3]={10, 12, 14};
+	
+	int numsizes = 4;
+	int sizes[4]={10, 12, 14, 16};
 
-	float stddevs[3];
-	for (int i=0; i<3; i++){
+	float stddevs[numsizes];
+	for (int i=0; i<numsizes; i++){
 		int w = sizes[i];
 
 		resize(matImageK, matBits, Size(w, w), 0, 0, INTER_AREA); 
@@ -229,7 +231,7 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 	//Find highest one
 	float max=0;
 	int imax=0;
-	for (int i=0;i<3;i++){
+	for (int i=0;i<numsizes;i++){
 		if (stddevs[i]>max){
 			imax=i;
 			max=stddevs[i];
@@ -394,7 +396,7 @@ std::string bc2D::decode_pure_barcode(cv::Mat matImage){
 	    }*/
 	}
 
-	cout << " decode_pure_barcode END" << endl;
+	//cout << " decode_pure_barcode END" << endl;
 	return bcString;
 }
 
@@ -415,6 +417,10 @@ std::string bc2D::decode_image_barcode(const cv::Mat &matImage, vector<int> vecB
 		cvtColor(matImage, matImageK_orig, cv::COLOR_BGR2GRAY);
 	} else {
 		matImageK_orig=matImage;//.clone();
+	}
+
+	if (matImage.total()<300){
+		return "";
 	}
 
 	for (int w=0; w<numwiggles; w++){
@@ -447,6 +453,10 @@ std::string bc2D::decode_image_barcode(const cv::Mat &matImage, vector<int> vecB
 
 		}
 
+		if (matImageK.total()<300){
+			return "";
+		}
+
 		//Copy the data, making sure we have no loose ends or 'smart' data referencing
 		Mat matCopy;
 		matImageK.copyTo(matCopy);
@@ -474,7 +484,7 @@ std::string bc2D::decode_image_barcode(const cv::Mat &matImage, vector<int> vecB
 			Ref<Result> result(mfReader->decode(bitmapRef, hints)); 
 
 			bcString=string(result->getText()->getText());
-			cout << bcString << endl;
+			//cout << bcString << endl;
 			/*if (result->getResultPoints()->size()==4){
 				bc.UL = Point(result->getResultPoints()[0]->getX(), result->getResultPoints()[0]->getY());
 				bc.BL = Point(result->getResultPoints()[1]->getX(), result->getResultPoints()[1]->getY());
@@ -872,7 +882,7 @@ std::string bc2D::readQR(cv::Mat matImage, double dpi){
 			
 			vector<int> codeType;
 			codeType.push_back(12); //6=dmtx, 12=qr;
-			string strBarcode = decode_image_barcode(matBarcode, codeType, 5 );
+			string strBarcode = decode_image_barcode(matBarcode, codeType, 5); //QR CODE
 
 			if (strBarcode.empty()){
 				continue;
@@ -1083,7 +1093,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 
 
 
-
+/*
 
 		//Expand the size of the barcode a bit
 		Rect bRectPlus = boundRect-bc_ptadd+bc_szadd;
@@ -1095,34 +1105,38 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 		Rect bRectPlusMargin = bRectPlus - ptadd_mask + szadd_mask;
 
 		bRectPlusMargin = util::constrainRectInSize(bRectPlusMargin, matImage.size());
-		Mat matBarcode = matImage(bRectPlusMargin).clone(); //Take the RGB image, as its not blurred etc
+		Mat mat_barcode_unrotated = matImage(bRectPlusMargin).clone(); //Take the RGB image, as its not blurred etc
 
 
+		if (mat_barcode_unrotated.total()<100){
+			continue;
+		}
 
 
 		//Rotate it
-		util::rotate(matBarcode, rotangle, matBarcode);
+		Mat mat_barcode;
+		util::rotate(mat_barcode_unrotated, rotangle, mat_barcode);
 
 		//Crop off the margin we introduced
 		Point ptrm_mask = ptadd_mask;
 		Size  sz_orig=bRectPlus.size();//retain original size
 		Rect  rMask(ptrm_mask, sz_orig);
  
-		rMask = util::constrainRectInSize(rMask, matBarcode.size());
-		matBarcode = matBarcode(rMask); 
+		rMask = util::constrainRectInSize(rMask, mat_barcode.size());
+		mat_barcode = mat_barcode(rMask); 
 
 		if (debugbarcode){
-			imwrite("/Users/tzaman/Desktop/bc/" + boost::lexical_cast<string>(i)+"_dmtx.png", matBarcode);
+			imwrite("/Users/tzaman/Desktop/bc/" + boost::lexical_cast<string>(i)+"_dmtx.png", mat_barcode);
 		}
 
 		vector<int> codeType;
 		codeType.push_back(6); //6=dmtx, 12=qr;
 
 		//cout << "Attempting to read the barcode.." << endl;
-		std::string strBarcode = decode_image_barcode(matBarcode, codeType, 5);
+		std::string strBarcode = decode_image_barcode(mat_barcode, codeType, 5); //Datamatrix
 
 
-		//imwrite(boost::lexical_cast<string>(i)+"_dmtx.png", matBarcode);
+		//imwrite(boost::lexical_cast<string>(i)+"_dmtx.png", mat_barcode);
 
 		if (strBarcode.empty()){
 			continue;
@@ -1130,6 +1144,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 			cout << "Found barcode:" << strBarcode << endl;
 			return strBarcode;
 		}
+		*/
 	}
 
 
