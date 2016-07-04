@@ -707,7 +707,18 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 		//Add the actual location to the struct
 		codeNow.rotRect = rotRectBarcode;
 
-		vecStripecodes.push_back(codeNow);
+		//Make sure double barcode readout does not happen i.e.: '10007**10008', so split that up
+		std::vector<std::string> split_codes;
+		split_codes = util::split(codeNow.str, "**");
+		if (split_codes.size()>1){
+			std::cout << "Found multiple split barcodes (**) from readout:'" << codeNow.str << "'" << std::endl;
+		}
+		for (int i=0; i<split_codes.size();i++){
+			std::cout << "\t Pushing out (sub)barcode #" << i << "=" << split_codes[i] << std::endl;
+			stripeCode code_now_sub = codeNow; // Copy its contents
+			code_now_sub.str =  split_codes[i]; // And change the string
+			vecStripecodes.push_back(code_now_sub); // And push out
+		}
 
 		//TODO: removed duplicate barcodes?
 

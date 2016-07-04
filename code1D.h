@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **
 ** Copyright (C) 2015 Tim Zaman.
@@ -67,10 +68,6 @@
 #include <zxing/Result.h>
 
 #include <exception>
-
-
-
-
 
 #include "sort.h"
 #include "utils_opencv.h"
