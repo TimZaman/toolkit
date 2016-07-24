@@ -1,15 +1,14 @@
 /**
 --------------------------------------------------------------------------------
--   Module      :   keepalive.h
--   Description :   A wrapper to keep an app alive, written
--                   in C++ and Objective-C so made for the OSX platform.
--   Author      :   Tim Zaman, 18-FEB-2016
+-   Module      :   notifier.h
+-   Description :   A micro wrapper for the embedded OS-X notification center.
+-   Author      :   Tim Zaman, 20-NOV-2015
 --------------------------------------------------------------------------------
 */
 
 /*
 
-Copyright (c) 2016 Tim Zaman
+Copyright (c) 2015 Tim Zaman
 
 Permission to use, copy, modify, distribute, and sell this software
 for any purpose is hereby granted without fee, provided
@@ -22,24 +21,23 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
  
 */
 
-#ifndef KEEPALIVE_H
-#define KEEPALIVE_H
+#ifndef NOTIFIER_H
+#define NOTIFIER_H
 
-class KeepAlive {
+class Notifier {
  public:
-    KeepAlive(){
-        KeepAliveMM();
+    void notify(std::string title, std::string message){
+        notifyMM(title, message);
     }
-
-    ~KeepAlive(){
-        KeepAliveDestructorMM();
-    }
-
+ private:
 #ifdef __APPLE__ 
-    void KeepAliveMM();
-    void KeepAliveDestructorMM();
+        //Only apple can use the notification in the .mm class
+    void notifyMM(std::string title, std::string message);
 #else
-    // Keep other platforms alive
+    //On non-apple systems, use another notification system
+    void notifyMM(std::string title, std::string message){
+        // @TODO Display a notification on other platforms
+    }
 #endif 
 
 };
