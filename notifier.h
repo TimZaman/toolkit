@@ -24,6 +24,8 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #ifndef NOTIFIER_H
 #define NOTIFIER_H
 
+#include <string>
+
 class Notifier {
  public:
     void notify(std::string title, std::string message){
@@ -31,10 +33,10 @@ class Notifier {
     }
  private:
 #ifdef __APPLE__ 
-        //Only apple can use the notification in the .mm class
+    // Only apple can use the notification in the .mm class
     void notifyMM(std::string title, std::string message);
 #else
-    //On non-apple systems, use another notification system
+    // On non-apple systems, use another notification system
     void notifyMM(std::string title, std::string message){
         // @TODO Display a notification on other platforms
     }
