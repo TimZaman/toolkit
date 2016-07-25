@@ -1,6 +1,6 @@
 /**
 --------------------------------------------------------------------------------
--   Module      :   RunGuard.h
+-   Module      :   runGuard.h
 -   Description :   This file for usage with QT makes sure only a single
 -                   instance of the program is run.
 -   Author      :   SaZ from Stackoverflow
