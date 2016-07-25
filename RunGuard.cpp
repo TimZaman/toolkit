@@ -1,6 +1,6 @@
 /**
 --------------------------------------------------------------------------------
--   Module      :   RunGuard.cpp
+-   Module      :   runGuard.cpp
 -   Description :   This file for usage with QT makes sure only a single
 -                   instance of the program is run.
 -   Author      :   SaZ from Stackoverflow
@@ -8,7 +8,7 @@
 --------------------------------------------------------------------------------
 */
 
-#include "RunGuard.h"
+#include "runGuard.h"
 #include <QCryptographicHash>
 
 
