@@ -69,35 +69,35 @@ namespace util{
 	// === FUNCTIONS === //
 	std::vector<std::string> split(std::string, std::string);
 	std::string changeFileExtension(std::string, std::string);
-	bool anySubstringInString(std::vector<std::string>, std::string );
+	bool anySubstringInString(std::vector<std::string> &, std::string );
 
 	std::string urlencode(const std::string &s);
 
-	double calcMean(std::vector<int> scores);
-	double calcMean(std::vector<double> scores);
-	double calcMedian(std::vector<double> scores);
+	double calcMean(std::vector<int>);
+	double calcMean(std::vector<double>);
+	double calcMedian(std::vector<double>);
 	double calcMeanOfQuarterAndThreeQuarterPercentile(std::vector<double>);
 	bool isValidURL(std::string);
 
 	void logASL(std::string);
 	std::string escapeRegex(std::string);
 	std::vector<std::string> regexReplaceInVector(std::vector<std::string>, std::string, std::string);
-	std::vector<std::string> correlateFileVectorFormat(std::vector<std::string> , std::string , int , int &, std::vector<std::string> &);
+	std::vector<std::string> correlateFileVectorFormat(std::vector<std::string>, std::string , int , int &, std::vector<std::string> &);
 	std::vector<std::string> folderFilesToVector(std::string folder);
 	std::map<std::string, std::string> relateFormatAndFile(std::string, std::string);
-	std::vector<std::string> getRegexMatches(std::string strRegex, std::string strMatches);
-	std::string ReplaceAll(std::string str, const std::string& from, const std::string& to);
-	//std::string fileformatToRegex(std::string);
+	std::vector<std::string> getRegexMatches(std::string, std::string );
+	void splitDoubleRegex(std::vector<std::string> &, std::vector<std::string> &);
+	std::string ReplaceAll(std::string, const std::string&, const std::string&);
 	std::string regex_escape(const std::string&);
 
 	int xfilelength(int );
 
-	double interpolate(double x, std::vector< std::pair<double, double> > &table);
-	void makeBezier(double gamma, double contrast, int N_SEG, int lutX[], int lutY[]);
-	void makeBezier(double gamma, double contrast, int N_SEG, std::vector<int> &, std::vector<int> &);
+	double interpolate(double, std::vector< std::pair<double, double> > &);
+	void makeBezier(double, double, int, int*, int*);
+	void makeBezier(double, double, int, std::vector<int> &, std::vector<int> &);
 
-	ExifEntry* init_tag(ExifData *, ExifIfd, ExifTag );
-	ExifEntry* create_tag(ExifData *, ExifIfd, ExifTag , size_t );
+	ExifEntry* init_tag(ExifData *, ExifIfd, ExifTag);
+	ExifEntry* create_tag(ExifData *, ExifIfd, ExifTag, size_t);
 
 };
 

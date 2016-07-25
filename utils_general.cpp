@@ -2,7 +2,7 @@
 
 #include "utils_general.h"
 
-std::vector<std::string> util::split(std::string data, std::string token){
+std::vector<std::string> util::split(std::string data, std::string token) {
     std::vector<std::string> output;
     int pos = std::string::npos;
     do {
@@ -14,14 +14,14 @@ std::vector<std::string> util::split(std::string data, std::string token){
     return output;
 }
 
-std::string util::changeFileExtension(std::string filename, std::string new_extension){
+std::string util::changeFileExtension(std::string filename, std::string new_extension) {
 	// Note the new extension is supposed to have a period in it: i.e. '.jpg'
 	boost::filesystem::path p(filename);
 	return p.replace_extension(new_extension).string();
 }
 
-bool util::anySubstringInString(std::vector<std::string> vector_of_substrings, std::string str){
-	for (int i=0; i<vector_of_substrings.size(); i++){
+bool util::anySubstringInString(std::vector<std::string> & vector_of_substrings, std::string str) {
+	for (int i = 0; i < vector_of_substrings.size(); i++) {
 		if (str.find(vector_of_substrings[i]) != std::string::npos) {
 			return true;
 		}
@@ -29,7 +29,7 @@ bool util::anySubstringInString(std::vector<std::string> vector_of_substrings, s
 	return false;
 }
 
-std::string util::urlencode(const std::string &s){
+std::string util::urlencode(const std::string &s) {
 	static const char lookup[]= "0123456789abcdef";
 	std::stringstream e;
 	for(int i=0, ix=s.length(); i<ix; i++){
@@ -49,7 +49,7 @@ std::string util::urlencode(const std::string &s){
 }
 
 //TODO: use template for this
-double util::calcMean(std::vector<int> scores){ //calculates mean
+double util::calcMean(std::vector<int> scores) { //calculates mean
 	if (scores.size()==0) {
 		std::cerr << "Warning! Empty vector in calcMedian!" << std::endl;
 		return 0;
@@ -475,7 +475,7 @@ std::vector<std::string> util::getRegexMatches(std::string str_regex, std::strin
 	return vec_matches;
 }
 
-void splitDoubleRegex(std::vector<std::string> & vecMatchesFormat, std::vector<std::string> & vecMatchesFilename){
+void util::splitDoubleRegex(std::vector<std::string> & vecMatchesFormat, std::vector<std::string> & vecMatchesFilename){
 	std::cout << "splitDoubleRegex([";
 	for (int i=0; i<vecMatchesFormat.size(); i++){ std::cout << vecMatchesFormat[i] << ",";}
 	std::cout <<"],[";
@@ -535,7 +535,6 @@ void splitDoubleRegex(std::vector<std::string> & vecMatchesFormat, std::vector<s
 	std::cout << "end splitDoubleRegex()" << std::endl;
 }
 
-
 std::map<std::string, std::string> util::relateFormatAndFile(std::string strFormat, std::string strFilename){
 	// ex: relateFormatAndFile("/tif/{var}_{\%04d}.tif","/home/bla/tif/test_01234.tif");
 	std::cout << "relateFormatAndFile(" << strFormat << ", " << strFilename << ")" << std::endl;
@@ -548,14 +547,12 @@ std::map<std::string, std::string> util::relateFormatAndFile(std::string strForm
 
 	std::cout << "Escaped = " << strFormatEsc << ", " << strFilename << "" << std::endl;
 
-
 	//    \/tif\/\{var\}_\{%04d\}\.tif
 	boost::regex regex_num(".\\{(.*?)\\}");
 	std::string strFormatRx;
 	strFormatEsc = ".*"+strFormatEsc; //Match any prefix (like hotfolder dir etc)
-	strFormatRx = boost::regex_replace(strFormatEsc, regex_num, "(.*?)"); //TODO get correct amount of numbers    ->THIS CRASHES ON UBUNTU+NLS?
+	strFormatRx = boost::regex_replace(strFormatEsc, regex_num, "(.*?)"); // @TODO(tzaman) get correct amount of numbers ->THIS CRASHES ON UBUNTU+NLS?
 	std::cout << "strFormatRx=" << strFormatRx << std::endl;
-
 
 	std::vector<std::string> vecMatchesFormat = getRegexMatches(strFormatRx, strFormat);
 	std::vector<std::string> vecMatchesFilename = getRegexMatches(strFormatRx, strFilename);
@@ -568,7 +565,6 @@ std::map<std::string, std::string> util::relateFormatAndFile(std::string strForm
 	//Now here it is still possible to have connected regex string, fe {%06d}{datamatrix}.
 	//We will now separate these and give them their own index in the vectors
 	splitDoubleRegex(vecMatchesFormat, vecMatchesFilename);
-
 
 	if (vecMatchesFormat.size() != vecMatchesFilename.size()){
 		std::cout << "vecMatches sizes do not correspond, returning." << std::endl;
@@ -584,11 +580,12 @@ std::map<std::string, std::string> util::relateFormatAndFile(std::string strForm
 	return mapFormatAndFile;
 }
 
-
-
+//Extract the correlation names f.e. Original/{%04d}.tif to Original/0014.tif for all outputs in the vector
 std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string> vecFormats, std::string filename, int numAdd, int &numNow, std::vector<std::string> &vecNumFormats){
 	std::cout << "correlateFileVectorFormat([";
-	for (int i=0; i<vecFormats.size();i++){ std::cout << vecFormats[i] << ",";}
+	for (int i=0; i<vecFormats.size();i++){
+		std::cout << vecFormats[i] << ",";
+	}
 	std::cout << "]," << filename << "," << numAdd << "," << numNow << ")" << std::endl;
 	//vecNumFormats is everything in the format replaced except the actual number;
 	//numNow is the current number, numAdd is the number to be added.
