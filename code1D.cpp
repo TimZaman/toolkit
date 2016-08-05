@@ -157,10 +157,10 @@ stripeCode bc1D::decode_c39_tzaman(cv::Mat matBarcode1D){
 	int width_wide_narrow_division_white = util::calcMeanOfQuarterAndThreeQuarterPercentile(intervals_white);
 	int width_wide_narrow_division_black = util::calcMeanOfQuarterAndThreeQuarterPercentile(intervals_black);
 	//Account for the fact that character spacing is thin and more thin divisors that wide
-	width_wide_narrow_division_white*=1.3;
+	width_wide_narrow_division_white *= 1.3;
 
 	//Account for the fact that at most 2/5 are black wide.
-	width_wide_narrow_division_black*=1.1;
+	width_wide_narrow_division_black *= 1.1;
 
 	double width_max = max(width_wide_narrow_division_white, width_wide_narrow_division_black) * 2.5;
 

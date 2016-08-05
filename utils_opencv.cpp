@@ -704,7 +704,7 @@ static void util::rotatingCalipers( const cv::Point2f* points, int n, float* out
         /* dotproduct */
         height = -dx * base_b + dy * base_a;
 
-        longest_side = std::max(abs(width), abs(height));
+        longest_side = std::max(std::abs(width), std::abs(height));
         //area = width * height;
         //longest_side = 
         //std::cout << "longest_side=" << longest_side << std::endl;
@@ -803,7 +803,7 @@ cv::RotatedRect util::minAreaSquare( cv::InputArray _points ){
 	return box;
 }
 
-
+#ifdef UTILS_GENERAL_TIM_H
 cv::Mat util::correctGamma(cv::Mat &img, cv::Vec3d gamma , double contrast , bool forSaving){
 	return correctGamma(img, gamma[2], gamma[1], gamma[0], contrast , forSaving);
 }
@@ -935,4 +935,5 @@ cv::Mat util::correctGamma(cv::Mat &img, double gammaR,  double gammaG ,  double
 
 	return returnImg;
 }
+#endif // UTILS_GENERAL_TIM_H
 

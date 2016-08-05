@@ -399,45 +399,7 @@ int util::xfilelength(int fd){ //is static in .h
 	return(sb.st_size);
 }
 
-/*
-std::string util::fileformatToRegex(std::string fileformat ){
-	//Escape chars for regex first..
-	//Change {%04d} to \d{4}
-	//Change {datamatrix} to .*
-	//Change {manual} to .*
 
-	std::string strRegex;
-
-	if (fileformat.size() < 2){
-	std::cout << "Input fileformat too small (" << fileformat.size() << "). Returning." << std::endl;
-	return strRegex;
-	}
-
-	//First escape the regex
-	strRegex = regex_escape(fileformat);
-	std::cout << "fileformat=" << fileformat << std::endl;
-	std::cout << "strRegex=" << strRegex << std::endl;
-
-
-	boost::regex regex_num("\\{(%[0-9]*d)\\}");
-	strRegex = boost::regex_replace(strRegex, regex_num, "\\\\d{4}");//@TODO use good amount of digits !!!!!!!!!!!!!
-	std::cout << "strRegex=" << strRegex << std::endl;
-
-	//boost::regex regex_anyBrace("\\{(.*?)\\}");
-	boost::regex regex_anyBrace("(?<!\\\\d)\\{(.*?)\\}");//(?<!\\d){(.*?)}
-	strRegex = boost::regex_replace(strRegex, regex_anyBrace, ".*");
-
-	std::cout << "strRegex=" << strRegex << std::endl;
-
-	//Now put a a priory regex in
-	//strRegex.insert(0, ".*"); //Accept any prependage
-
-	return strRegex;
-}*/
-
-
-
-//std::vector<std::string> regexReplaceInVector(vecFILENAMING, number_now, "\\{(%[0-9]*d)\\}"){
 std::vector<std::string> util::regexReplaceInVector(std::vector<std::string> vecNames, std::string strInsert, std::string strRegex){
 	std::cout << "regexReplaceInVector([";
 	for (int i=0; i<vecNames.size(); i++){ std::cout << vecNames[i] << "], ";}
@@ -651,9 +613,9 @@ std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string
 	//vecNumFormats = regexReplaceInVector(vecFormats, barcode_now, "\\{datamatrix\\}");
 
 	//string number_string  = getNumberFromFileFormat(vecNumFormats[formatID], filename);
-	std::cout << "number_string=" << number_string << std::endl;
+	//std::cout << "number_string=" << number_string << std::endl;
 
-	numNow = boost::lexical_cast<int>( number_string ) +numAdd;
+	numNow = std::stoi(number_string) + numAdd;
 
 	if (numAdd!=0){
 		std::string strSize = boost::lexical_cast<std::string>(number_string.size());

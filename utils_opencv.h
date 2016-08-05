@@ -24,30 +24,10 @@
 #include <cstdlib>
 #include <dirent.h> //dir listing
 
-#ifndef Q_MOC_RUN
-	#include <boost/filesystem.hpp>
-	#include <boost/lexical_cast.hpp> //int to std:string conversion
-	#include <boost/format.hpp>
-	#include <boost/variant.hpp>
-	#include <boost/regex.hpp>	
-	#include <boost/foreach.hpp>
-#endif
-
-
 #include <opencv2/opencv.hpp>
 
-#include <libexif/exif-data.h> //libexif-dev
-#include <exiv2/exiv2.hpp> //libexiv2-dev
-
-#ifdef __APPLE__
-	#include <asl.h> //Apple System Logger API
-#endif
-
-#include "utils_general.h"
-
-namespace util{
-	//OpenCV related
-
+namespace util {
+	// OpenCV related
 	bool detectClipping(cv::Mat, int, double, int, double, std::string &);
 	void expand(cv::Rect & , double );
 	std::string matToJpgString(cv::Mat);
@@ -76,8 +56,10 @@ namespace util{
 	cv::Size getFitSize(cv::Size sizeIn, cv::Size sizeOut);
 	static void rotatingCalipers( const cv::Point2f* points, int n, float* out );
 	cv::RotatedRect minAreaSquare( cv::InputArray _points );
+#ifdef UTILS_GENERAL_TIM_H
 	cv::Mat correctGamma(cv::Mat &img, cv::Vec3d gamma , double contrast , bool forSaving);
 	cv::Mat correctGamma(cv::Mat &img, double gammaR,  double gammaG ,  double gammaB , double contrast , bool forSaving);
+#endif
 };
 
 

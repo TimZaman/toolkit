@@ -25,28 +25,20 @@
 #include <pwd.h>
 #include <cstdlib>
 
+// @TODO(tzaman): replace all boost with C++11
 #ifndef Q_MOC_RUN
-	#include <boost/program_options.hpp> //libboost-dev, libboost-1.53-all-dev
 	#include <boost/filesystem.hpp>
-	#include <boost/lexical_cast.hpp> //int to std:string conversion
 	#include <boost/format.hpp>
-	//#include <boost/thread/thread.hpp> //for this::thread::sleep
-	#include <boost/variant.hpp>
 	#include <boost/regex.hpp>	
-	#include <boost/foreach.hpp>
 #endif
+//#include <regex>
 
-#include <regex>
-
-#include <opencv2/opencv.hpp>
 
 #include <libexif/exif-data.h> 
-#include <exiv2/exiv2.hpp>  //is this needed?
 
 #ifdef __APPLE__
 	#include <asl.h> //Apple System Logger API
 #endif
-
 
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
