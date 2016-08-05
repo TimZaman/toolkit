@@ -619,19 +619,28 @@ std::vector<stripeCode> bc1D::readStripeCode(cv::Mat matImage, double dpi){ //wa
 		//Make the rotated rectangle around the barcode
 		RotatedRect rotRectBarcode(pt_barcode_center, Size2f(barcode_width, height_median), angle_deg );
 
+
+
+
+
+
+		const double add_width_on_sides_before_decoding = 7.0; // this number will be multiplied by average bar width
+
 		//Add margin (of a few median widths)
-		rotRectBarcode.size += Size2f(width_mean*7, 0);
+		rotRectBarcode.size += Size2f(width_mean * add_width_on_sides_before_decoding, 0);
 
 
+		const double height_retrainer_for_collapse = 0.25;
 
 		//Extract the barcode itself
 		cv::RotatedRect rotRectBarcodeThin = rotRectBarcode;
 		//Crop off some margin in thickness because we dont want to collapse the entire barcode.
 		if (rotRectBarcodeThin.size.width < rotRectBarcodeThin.size.height){
-			rotRectBarcodeThin.size.width *= 0.25;
+			rotRectBarcodeThin.size.width *= height_retrainer_for_collapse;
 		} else {
-			rotRectBarcodeThin.size.height *= 0.25;
+			rotRectBarcodeThin.size.height *= height_retrainer_for_collapse;
 		}
+		
 		Mat matBarcode2D = util::crop(matImageK, rotRectBarcodeThin);
 
 		//Collapse the barcode
