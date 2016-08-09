@@ -16,6 +16,7 @@
 #include <vector>
 #include <clocale>
 #include <fcntl.h>
+#include <map>
 //#include <pthread.h> //Multithreading (GTK)
 #include <time.h>
 #include <sys/statvfs.h> //Free disk space checker
@@ -30,6 +31,12 @@
 
 // @TODO(tzaman): replace all boost with C++11
 //#include <regex>
+
+#ifdef UTILS_WITH_BOOST
+    #include <boost/filesystem.hpp>
+    #include <boost/format.hpp>
+    #include <boost/regex.hpp>  
+#endif
 
 #ifdef __APPLE__
     #include <asl.h> //Apple System Logger API
@@ -77,29 +84,21 @@ namespace util{
     void logASL(std::string);
     std::string escapeRegex(std::string);
 
- #if defined BOOST_RE_REGEX_H || defined BOOST_RE_REGEX_HPP
+#ifdef UTILS_WITH_BOOST
     std::vector<std::string> regexReplaceInVector(std::vector<std::string>, std::string, std::string);
     bool isValidURL(std::string);
     std::vector<std::string> getRegexMatches(std::string, std::string );
     void splitDoubleRegex(std::vector<std::string> &, std::vector<std::string> &);
     std::map<std::string, std::string> relateFormatAndFile(std::string, std::string);
-#ifdef BOOST_FORMAT_HPP
+
     std::string regex_escape(const std::string&);
     std::vector<std::string> correlateFileVectorFormat(std::vector<std::string>, std::string , int , int &, std::vector<std::string> &);
-#endif // BOOST_FORMAT_HPP
-#endif // BOOST_RE_REGEX_H || BOOST_RE_REGEX_HPP   
-
-
-#ifdef BOOST_FILESYSTEM_FILESYSTEM_HPP
     std::vector<std::string> folderFilesToVector(std::string folder);
     std::string changeFileExtension(std::string, std::string);
-#endif //BOOST_FILESYSTEM_FILESYSTEM_HPP
+#endif // UTILS_WITH_BOOST
 
-
-    
     std::string ReplaceAll(std::string, const std::string&, const std::string&);
     
-
     int xfilelength(int );
 
     double interpolate(double, std::vector< std::pair<double, double> > &);
