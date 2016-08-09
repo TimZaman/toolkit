@@ -123,6 +123,40 @@ cv::Rect util::retainCenterBlob(cv::Mat & matImage, int white_threshold){
     return bounding_rect;
 }
 
+cv::RotatedRect util::findRectAroundLargeBlobs(cv::Mat & mat_image, double minimum_blobfactor) {
+    int largest_area=0;
+    int largest_contour_index=0;
+
+    int minimum_blob_area = mat_image.cols * mat_image.rows * minimum_blobfactor;
+
+    std::vector < cv::RotatedRect > large_rotrects; 
+    std::vector<cv::Point> point_on_large_contour;
+    std::vector< std::vector<cv::Point> > contours; // Vector for storing contour
+    std::vector< cv::Vec4i> hierarchy;
+    cv::findContours(mat_image.clone(), contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE ); // Find the contours in the image
+    for( int i = 0; i < contours.size(); i++ ) {
+        double a=contourArea( contours[i],false);  //  Find the area of contour
+        if (a > minimum_blob_area) {
+            large_rotrects.push_back(cv::minAreaRect(contours[i]));
+            point_on_large_contour.push_back(contours[i][0]);
+        }
+    }
+
+    // Now draw lines between all rotrects, this connects all the largest blobs.
+    for ( int i = 0; i < large_rotrects.size()-1; i++ ) {
+        cv::line(mat_image, large_rotrects[i].center, large_rotrects[i+1].center, cv::Scalar(255), 2);
+    }
+    // Make sure the center line is connected with a point on the contour. This is allowed because i assume convexity
+    for ( int i = 0; i < large_rotrects.size(); i++ ) {
+        cv::line(mat_image, point_on_large_contour[i], large_rotrects[i].center, cv::Scalar(255), 2);
+    }
+    //cv::imwrite("/Users/tzaman/Desktop/mat_connected_blobrots.png", mat_image);
+
+    // Finally we do a biggest blob (all big blobs are not connected! what a great dirty hack!)
+    cv::RotatedRect bounding_rect = util::findBiggestBlobRot(mat_image);
+
+    return bounding_rect;
+}
 
 cv::Rect util::findBiggestBlob(cv::Mat & matImage){
     int largest_area=0;

@@ -26,6 +26,7 @@ namespace util {
     cv::RotatedRect scale(cv::RotatedRect, double);
     cv::Rect findBiggestBlob(cv::Mat & matImage);
     cv::RotatedRect findBiggestBlobRot(cv::Mat & matImage);
+    cv::RotatedRect findRectAroundLargeBlobs(cv::Mat & mat_image, double minimum_blobfactor);
     cv::Rect retainCenterBlob(cv::Mat & matImage, int);
     cv::Point2f ptMove(cv::Point2f pt, double dist, double angle_deg);
     std::vector<cv::Point> vecrotrect2vecpt(std::vector<cv::RotatedRect> vecRotRect);
