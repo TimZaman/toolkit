@@ -45,6 +45,7 @@ namespace util {
     cv::Size getFitSize(cv::Size sizeIn, cv::Size sizeOut);
     static void rotatingCalipers( const cv::Point2f* points, int n, float* out );
     cv::RotatedRect minAreaSquare( cv::InputArray _points );
+    double rectangleSimilarity(cv::Rect, cv::Rect);
 #ifdef UTILS_GENERAL_TIM_H
     cv::Mat correctGamma(cv::Mat &img, cv::Vec3d gamma , double contrast , bool forSaving);
     cv::Mat correctGamma(cv::Mat &img, double gammaR,  double gammaG ,  double gammaB , double contrast , bool forSaving);
