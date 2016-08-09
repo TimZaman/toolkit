@@ -265,21 +265,6 @@ void util::makeBezier(double gamma, double contrast, int N_SEG, int lutX[], int 
     //std::cout << "Interpolation done, discrete (x) bezier constructed." << std::endl;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void util::logASL(std::string str_msg){
   #ifdef __APPLE__
     aslclient log_client;
@@ -300,9 +285,6 @@ void util::logASL(std::string str_msg){
   #endif
 }
 
-
-
-
 std::string util::escapeRegex(std::string str) {
   str = ReplaceAll(str, "/", "\\/");
   str = ReplaceAll(str, ".", "\\.");
@@ -320,11 +302,6 @@ std::string util::escapeRegex(std::string str) {
 // {datamatrix}/{datamatrix}_{%04d}.tif
 // 1823-1234/1823-1234_4321.tif
 // .*\/.*_\d{4}\.tif
-
-
-
-
-
 
 int util::xfilelength(int fd){ //is static in .h
     struct stat sb;
@@ -344,7 +321,7 @@ std::string util::ReplaceAll(std::string str, const std::string& from, const std
     return str;
 }
 
-#if defined BOOST_RE_REGEX_H || defined BOOST_RE_REGEX_HPP
+#ifdef UTILS_WITH_BOOST
 
 bool util::isValidURL(std::string strUrl){
     try
@@ -496,8 +473,6 @@ std::map<std::string, std::string> util::relateFormatAndFile(std::string strForm
     return mapFormatAndFile;
 }
 
-#ifdef BOOST_FORMAT_HPP
-
 std::string util::regex_escape(const std::string& string_to_escape) {
     static const boost::regex re_boostRegexEscape( "[\\^\\.\\$\\|\\(\\)\\[\\]\\*\\+\\?\\/\\\\]" );
     const std::string rep( "\\\\\\1&" );
@@ -593,11 +568,6 @@ std::vector<std::string> util::correlateFileVectorFormat(std::vector<std::string
     return vecFormats;
 }
 
-#endif // BOOST_FORMAT_HPP
-#endif // BOOST_RE_REGEX_H || BOOST_RE_REGEX_HPP
-
-#ifdef BOOST_FILESYSTEM_FILESYSTEM_HPP
-
 std::string util::changeFileExtension(std::string filename, std::string new_extension) {
     // Note the new extension is supposed to have a period in it: i.e. '.jpg'
     boost::filesystem::path p(filename);
@@ -616,7 +586,7 @@ std::vector<std::string> util::folderFilesToVector(std::string folder){
     return vecFileNames;
 }
 
-#endif
+#endif // UTILS_WITH_BOOST
 
 
 #ifdef __EXIF_DATA_H__

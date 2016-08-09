@@ -738,7 +738,7 @@ cv::RotatedRect util::minAreaSquare( cv::InputArray _points ){
     return box;
 }
 
-#ifdef UTILS_GENERAL_TIM_H
+//#ifdef UTILS_GENERAL_TIM_H
 cv::Mat util::correctGamma(cv::Mat &img, cv::Vec3d gamma , double contrast , bool forSaving){
     return correctGamma(img, gamma[2], gamma[1], gamma[0], contrast , forSaving);
 }
@@ -870,5 +870,4 @@ cv::Mat util::correctGamma(cv::Mat &img, double gammaR,  double gammaG ,  double
 
     return returnImg;
 }
-#endif // UTILS_GENERAL_TIM_H
-
+//#endif // UTILS_GENERAL_TIM_H
