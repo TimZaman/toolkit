@@ -175,9 +175,10 @@ std::string doDmtxDecode(const Mat &matImageIn, long timeout_ms){
 		std::cout << "doDmtxDecode::Found Message!" << std::endl;
 		fputs("doDmtxDecode::output: \"", stdout);
 		fwrite(msg->output, sizeof(unsigned char), msg->outputIdx, stdout);
-		string_libdmtx = std::string( (const char*) msg->output, msg->outputSize);
+		//string_libdmtx = std::string( (const char*) msg->output, msg->outputSize); // can yield /0's
+		string_libdmtx = std::string(reinterpret_cast<char*>(msg->output));
 		fputs("\"\n", stdout);
-		dmtxMessageDestroy(&msg); //[TZ] Is this okay?
+		// dmtxMessageDestroy(&msg); // @TODO(tzaman) removed on 8 AUG 2016, this can crash apparently.
 	}
 	
 
