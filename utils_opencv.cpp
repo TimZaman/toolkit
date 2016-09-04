@@ -124,8 +124,8 @@ cv::Rect util::retainCenterBlob(cv::Mat & matImage, int white_threshold){
 }
 
 cv::RotatedRect util::findRectAroundLargeBlobs(cv::Mat & mat_image, double minimum_blobfactor) {
-    int largest_area=0;
-    int largest_contour_index=0;
+    int largest_area = 0;
+    int largest_contour_index = 0;
 
     int minimum_blob_area = mat_image.cols * mat_image.rows * minimum_blobfactor;
 
@@ -133,9 +133,10 @@ cv::RotatedRect util::findRectAroundLargeBlobs(cv::Mat & mat_image, double minim
     std::vector<cv::Point> point_on_large_contour;
     std::vector< std::vector<cv::Point> > contours; // Vector for storing contour
     std::vector< cv::Vec4i> hierarchy;
-    cv::findContours(mat_image.clone(), contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE ); // Find the contours in the image
+
+    cv::findContours(mat_image.clone(), contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE); // Find the contours in the image
     for( int i = 0; i < contours.size(); i++ ) {
-        double a=contourArea( contours[i],false);  //  Find the area of contour
+        double a = contourArea(contours[i], false);  //  Find the area of contour
         if (a > minimum_blob_area) {
             large_rotrects.push_back(cv::minAreaRect(contours[i]));
             point_on_large_contour.push_back(contours[i][0]);
@@ -143,11 +144,11 @@ cv::RotatedRect util::findRectAroundLargeBlobs(cv::Mat & mat_image, double minim
     }
 
     // Now draw lines between all rotrects, this connects all the largest blobs.
-    for ( int i = 0; i < large_rotrects.size()-1; i++ ) {
+    for ( int i = 0; i < static_cast<int>(large_rotrects.size())-1; i++ ) {
         cv::line(mat_image, large_rotrects[i].center, large_rotrects[i+1].center, cv::Scalar(255), 2);
     }
     // Make sure the center line is connected with a point on the contour. This is allowed because i assume convexity
-    for ( int i = 0; i < large_rotrects.size(); i++ ) {
+    for ( int i = 0; i < static_cast<int>(large_rotrects.size()); i++ ) {
         cv::line(mat_image, point_on_large_contour[i], large_rotrects[i].center, cv::Scalar(255), 2);
     }
     //cv::imwrite("/Users/tzaman/Desktop/mat_connected_blobrots.png", mat_image);

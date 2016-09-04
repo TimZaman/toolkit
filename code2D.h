@@ -101,7 +101,7 @@ namespace bc2D {
 	std::string decode_image_barcode(const cv::Mat &matImage, std::vector<int> vecBarcodeTypes, int numwiggles=1);
 
 	std::string readQR(cv::Mat matImage, double dpi);
-	std::string readDMTX(cv::Mat matImage, double dpi, double, double, int bin_thres);
+	std::string readDMTX(cv::Mat matImage, double dpi, double, double, int bin_thres, double ar_add=-1);
 
 
 };	// END NAMESPACE bc2D //

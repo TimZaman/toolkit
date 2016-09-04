@@ -625,7 +625,7 @@ std::string bc2D::readQR(cv::Mat matImage, double dpi){
 
 	vector<RotatedRect> rectCandidates;
 
-	bool useDebug=false;
+	bool useDebug = false;
 	Mat matGui;
 	if (useDebug){
 		matGui = matImageK.clone();
@@ -679,7 +679,7 @@ std::string bc2D::readQR(cv::Mat matImage, double dpi){
 	}
 
 	if (useDebug){
-		imwrite("0_qr_gui.png", matGui);
+		imwrite("/Users/tzaman/Desktop/bc/0_qr_gui.png", matGui);
 	}
 
 	cout << "Found " << rectCandidates.size () << " rectangular candidates" << endl;
@@ -902,12 +902,21 @@ std::string bc2D::readQR(cv::Mat matImage, double dpi){
 
 
 
-std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_inch_min, double barcode_width_inch_max, int bin_thres){
+std::string bc2D::readDMTX(cv::Mat matImage_in, double dpi, double barcode_width_inch_min, double barcode_width_inch_max, int bin_thres, double ar_add){
 	cout << "readDMTX()" << endl;
 
 	//@TODO: convert 16bit input to 8bit
 
-	bool debugbarcode = false; //FOR PRODUCTION PUT TO FALSE
+	cv::Mat matImage = matImage_in.clone();
+	if (ar_add >0) {
+		// this is used when barcodes do not have a correct aspect ratio (are not square)
+		//make 10% bigger (NMHN @FIXME)
+		resize(matImage, matImage, cv::Size(), ar_add, 1, INTER_AREA); 
+	}
+
+
+
+	bool debugbarcode = false; //FOR PRODUCTION PUT TO FALSE @FIXME
 
 	//Mat matImage = imread("/Users/tzaman/Desktop/bc.tif");
 	//Mat matImage = imread("/Users/tzaman/Desktop/qr.tif");
@@ -925,6 +934,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 	Mat matImageC; //contour image
 
 	cvtColor(matImage, matImageK, CV_BGR2GRAY);  //Convert RGB to BGR
+
 
 	//cout << "blur_start" << endl;
 	//Blur it to supress noise and shit
@@ -946,22 +956,21 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 	}
 
 
-	double squareness_threshold = 0.1; //f.e. 0.1=10% deviation aspect ratio width/height
+	double squareness_threshold = 0.15; //f.e. 0.1=10% deviation aspect ratio width/height
 	
 	double barcode_width_inch = 0.6; //DMTX oslo 0.48inch dmtx  (1dim)
 	//double bc_sizedef_threshold = 0.3; //f.e. 0.1=10% deviation to probable barcode size (1dim)
 
 	double bc_margin_extra_inch = 0.05; //add margin to final crop (in inches)
 
-	double hist_thres = 0.60; //f.e. 0.75=75% histgram comparison (with band-stop histogram filter)
-
-	//Histogram correspondance params
-	int histSize = 16; //from 0 to 255
-	float range[] = { 0, 256 } ; //the upper boundary is exclusive
-	const float* histRange = { range };
-	bool uniform = true; bool accumulate = false;
-	//Define the band-stop filter (that weights the center, gray, low and the whites and blacks high)
-	double idealhist[16]={1.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0};
+	//double hist_thres = 0.60; //f.e. 0.75=75% histgram comparison (with band-stop histogram filter)
+	////Histogram correspondance params
+	//int histSize = 16; //from 0 to 255
+	//float range[] = { 0, 256 } ; //the upper boundary is exclusive
+	//const float* histRange = { range };
+	//bool uniform = true; bool accumulate = false;
+	////Define the band-stop filter (that weights the center, gray, low and the whites and blacks high)
+	//double idealhist[16]={1.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0};
 
 	//Caculate barcode dimention from inches and dpi
 	//double barcode_width_px = dpi*barcode_width_inch;
@@ -981,7 +990,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 
 	for( int i = 0; i< contours.size(); i++ ) {// iterate through each contour. 
 		double a=contourArea( contours[i],false);  //  Find the area of contour
-		if (a<25){continue;}
+		if (a<400){continue;}
 		//cout << i << endl;
 		if (contours[i].size()<4){continue;}
 		
@@ -1031,15 +1040,19 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 
 
 		
-
+/*
+>>>>>>> 4b7388e87886181affd929f6db11f6beeb75fd0b
 		Mat matHist = matImageK(boundRect).clone();
  		
 
 		util::autoClipBrighten(matHist, 0.05, 0.95);
+<<<<<<< HEAD
 
 		
 
 
+=======
+>>>>>>> 4b7388e87886181affd929f6db11f6beeb75fd0b
 		//Check if histogram is any good, should have two distinct peaks.
 		Mat hist32;
 		calcHist( &matHist, 1, 0, Mat(), hist32, 1, &histSize, &histRange, uniform, accumulate );
@@ -1056,7 +1069,10 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 		for (int i=0;i<16;i++){
 			hist32.at<float>(i) *= (1.0/histarea);
 		}
+<<<<<<< HEAD
 
+=======
+*/
 		//cout << hist32 << endl;
 
 		//Compare with the ideal histogram and compute score
@@ -1080,7 +1096,7 @@ std::string bc2D::readDMTX(cv::Mat matImage, double dpi, double barcode_width_in
 		Mat matPureCrop = util::crop(matImage,rRect);
 
 		//Check if the size is still in a normal range
-		if (matPureCrop.total()<50){
+		if (matPureCrop.total()<400){
 			continue;
 		}
 
